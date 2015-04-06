@@ -1,2 +1,2 @@
-# MYWIKI
-My WiKi
+# WiKi
+Just For My Record
