@@ -1,3 +1,3 @@
 # WiKi
 Just For My Record  
-More in `Wiki` page
+More in [Wiki](https://github.com/jaiminpan/MYWIKI/wiki) page
