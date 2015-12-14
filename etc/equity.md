@@ -1,0 +1,62 @@
+在(联合)创始人之间如何分配股权(原创翻译)
+-------------------------------------
+
+英文原文 http://themacro.com/articles/2015/12/splitting-equity-among-founders/
+
+## 内容
+有创始人经常询问，应该怎么分配股权给他们的联合创始人。  
+当我在网上搜索这个话题，我经常看到一些可怕的建议，通常提倡不同的创始人间享有完全不同的股权比例。
+我们看到这一趋势在Y Combinator每年关注的数以千计的app项目上有所体现。
+
+#### 不平等股权分配
+以下是一些最经常提到的不平等股权分配的原因：
+* 我最先想出了这个点子
+* 我比联合创始人早开始为此工作N个月
+* 这是我们已经达成一致的
+* 我的联合创始人拿了N个月薪水，而我没有
+* 我比我的联合创始人早N个月工作开始全职工作
+* 我比我的联合创始人经验更丰富
+* 我募集了N万美元后，我的联合创始人才加入
+* 我做出了MVP(minimum viable product)后，我的联合创始人才加入
+* 为了创始人间决定投票计数原因
+
+![image](http://themacro.com/images/articles/badequitysplit-aa3dd2f4.png)  
+*Founders tend to make the mistake of splitting equity based on early work.*
+
+#### 四个基本原则
+以上的这些理由都违背了四个基本原则：
+
+* **一般需要7〜10年时间打造一个公司的高价值。** 第一年内的小变化没有理由造成今后2-10年的巨大股份差异。
+
+* **更多的股票=更多的动力。** 因为几乎所有的创业公司最终都会失败。创始人越有驱动力，成功的机会就越高。
+如果你的创始团队的动力不足而导致失败，就算有较大的股权比例也是一文不值的。
+
+* **如果你不重视／珍惜你的联合创始人，更不会重视／珍惜其他人。** 投资者关注创始人的股权分配，就能知道CEO是否重视他的联合创始人。
+如果只给一个联合创始人10％或1％，其他人要么认为他们要么不出色要么不重要。该团队的素质往往是投资人是否投资的主要因素。
+为什么要传达给投资者，你的团队不是很有价值或者不是很重要？
+
+* **初创公司取决于执行力，而不是想法。** 创始人间重大不合比例的股权分配，往往会倾向于最初提出想法的联合创始人，而不是那些打造产品，把产品推向市场的那部分联合创始人。
+
+![image](http://themacro.com/images/articles/equityahead-ef80e343.png)
+*Equity should be split equally because all the work is ahead of you.*
+
+#### 建议
+我对股权分配的建议可能是有争议的，但我们所有孵化的初创公司都是这样子做的，并且我们在YC几乎都是这样建议：
+在联合创始人间平均股权分配。 **[1]** 这些都是和你一起战斗的人。你和这些人相处的时间多过你的家人。
+这些都是人可以帮助你决定公司中最重要的问题的人。最后，这些人也是在你成功时和你一起庆祝的人。
+
+我相信，在创始人间平等或者接近平等的股权权益分配会成为标准。如果你不愿给你的合伙人同等的份额，那么或许你选择了错误的伙伴。
+
+#### 感谢
+感谢Justin Kan, Qasar Younis和Colleen Taylor评审了初稿
+
+#### 备注
+If you fear what will happen if you have to break up with a co-founder, make sure you have a proper vesting schedule. 
+In the Valley, a typical setup is to have four years of vesting with a one year “cliff.” 
+In other words, while you might own 50% of the company on paper, if you leave or get fired within a year you walk away with nothing. 
+After the one year point you get 25% of your stock. 
+Every month after that you get an additional 1/48th of your total stock. 
+You only earn all of your stock at the end of four years. 
+This ensures that founders are a good fit for the long haul – and if there is a problem you can fix it without harm in year one. 
+Another good contingency measure is for only the CEO to hold a board seat before a significant equity fundraise. 
+That will prevent board disputes during tough decisions, such as in the unlikely event that the CEO has to fire a co-founder.
