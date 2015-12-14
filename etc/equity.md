@@ -51,12 +51,8 @@
 感谢Justin Kan, Qasar Younis和Colleen Taylor评审了初稿
 
 #### 备注
-If you fear what will happen if you have to break up with a co-founder, make sure you have a proper vesting schedule. 
-In the Valley, a typical setup is to have four years of vesting with a one year “cliff.” 
-In other words, while you might own 50% of the company on paper, if you leave or get fired within a year you walk away with nothing. 
-After the one year point you get 25% of your stock. 
-Every month after that you get an additional 1/48th of your total stock. 
-You only earn all of your stock at the end of four years. 
-This ensures that founders are a good fit for the long haul – and if there is a problem you can fix it without harm in year one. 
-Another good contingency measure is for only the CEO to hold a board seat before a significant equity fundraise. 
-That will prevent board disputes during tough decisions, such as in the unlikely event that the CEO has to fire a co-founder.
+如果你害怕万一你不得不和其他联合创始人分道扬镳，确保你有一个合适的行权计划/股权退出计划(vesting schedule)。  
+在硅谷，一个典型的设置是分四年行权，和一年的cliff。换句话说，虽然你可能持有该公司50％的股份，如果在一年内你离开或者被开除，那么你什么也得不到。  
+一年后，你会得到你的股票的25％。之后每个月你另外会得到你总份额的的1/48。你所有的股份将会在4年后全部到手。  
+对于创业旅行来说，这有利于选择合适的合伙人 - 万一有问题，你也可以在第一年内解决。  
+另一个好的可操作措施是，在股权融资前，只有CEO有一个董事会席位。这将避免在艰难的决定时，产生董事会纠纷。比如CEO不得不需要开除联合创始人。  
