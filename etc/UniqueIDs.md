@@ -7,8 +7,8 @@ http://instagram-engineering.tumblr.com/post/10853187575/sharding-ids-at-instagr
 #### Each of our IDs consists of:
 
 * 41 bits for time in milliseconds (gives us 41 years of IDs with a custom epoch)
-* 13 bits that represent the logical shard ID
-* 10 bits that represent an auto-incrementing sequence, modulus 1024. This means we can generate 1024 IDs, per shard, per millisecond
+* 13 bits that represent the logical shard ID (max shards id: 2^13 = 8192)
+* 10 bits that represent an auto-incrementing sequence, modulus 1024 (2^10 = 1024). This means we can generate 1024 IDs, per shard, per millisecond
 
 #### Example:
 
