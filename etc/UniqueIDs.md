@@ -12,15 +12,16 @@ http://instagram-engineering.tumblr.com/post/10853187575/sharding-ids-at-instagr
 
 #### Example:
 
-1. time id
+1. time id:  
   1387263000 = September 9th, 2011, at 5:00pm  
+  milliseconds since the beginning of our epoch (defined January 1st, 2011)  
   `id = 1387263000 << (64-41)`
 
-2. shard id
+2. shard id:  
   user ID: 31341, logical shards: 2000, 31341 % 2000 -> 1341  
   `id |= 1341 << (64-41-13)`  
 
-3. seq id
+3. seq id:  
   generated 5000 IDs for this table already; next value is 5001  
   `id |= (5001 % 1024)`
 
