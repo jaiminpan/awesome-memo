@@ -2,6 +2,7 @@ Ganglia
 ---------
 Ganglia：http://ganglia.info/  
 Ganglia Wiki：http://sourceforge.net/apps/trac/ganglia  
+Source Code: https://github.com/ganglia/monitor-core  
 
 Introduce
 ----------
@@ -84,3 +85,9 @@ setting gmond
     gzip_output = no
   }
   ```
+
+#### Modules
+Please reference https://github.com/ganglia/gmond_python_modules  
+
+Q: `$GANGLIA_INSTALL/lib64/ganglia/modpython.so` not exists, which is for python modules  
+A: make sure `python.h` is existed when make && make install for ganglia. Or `yum install python-devel.x86_64`  
