@@ -841,3 +841,311 @@ ngx_http_chunked_filter_init(ngx_conf_t *cf)
     因此，如果filter顺利链执行到了链尾（那个特别定义的的”写“filter），将返回一个"OK"响应，
     但如果执行过程中遇到了错误，链将被砍断，同时Nginx将给出一个错误的信息。
     这是一个单向的，错误快速返回的，只使用函数引用实现的链表。帅啊！
+
+
+## 5. Load-balancers
+
+Load-balancer用来决定哪一个后端将会收到请求；目前存在的实现是用round-robin方式或者hash方式。
+本节将介绍load-balancer模块的装载及其调用。我们将用[upstream_hash_module](http://www.evanmiller.org/nginx/ngx_http_upstream_hash_module.c.txt)作例子。
+upstream_hash将对nginx.conf里配置的变量进行hash，来选择后端服务器。
+
+一个load-balancer分为六个部分:
+
+  1. 启用配置指令 (e.g, `hash;`) 将会调用_注册函数_
+  2. 注册函数将定义一些合法的`server` 参数 (e.g., `weight=`) 并注册一个 _upstream初始化函数_
+  3. upstream初始化函数将在配置经过验证后被调用，并且:
+
+    * 解析 `server` 名称为特定的IP地址
+    * 为每个sokcet连接分配空间
+    * 设置 _对端初始化函数_ 的回调入口
+  4. 对端初始化函数将在每次请求时被调用一次,它主要负责设置一些 _负载均衡函数_ 将会使用的数据结构。
+  5. 负载均衡函数决定把请求分发到哪里；每个请求将至少调用一次这个函数（如果后端服务器失败了，那就是多次了），有意思的事情就是在这里做的。
+  6. 最后，_对端释放函数_ 可以在与对应的后端服务器结束通信之后更新统计信息 (成功或失败)
+
+好像很多嘛，我来逐一讲讲。
+
+
+### 5.1. 启用指令
+
+指令声明，既确定了他们在哪里生效又确定了一旦流程遇到指令将要调用什么函数。load-balancer的指令需要置 `NGX_HTTP_UPS_CONF` 标志位，一遍让Nginx知道这个指令只会在`upstream`块中有效。
+同时它需要提供一个指向_注册函数_的指针。下面列出的是upstream_hash模块的指令声明：
+
+```
+    { ngx_string("hash"),
+      NGX_HTTP_UPS_CONF|NGX_CONF_NOARGS,
+      ngx_http_upstream_hash,
+      0,
+      0,
+      NULL },
+```
+
+这都不是些新东西。
+
+### 5.2. 注册函数
+
+上面的回调函数`ngx_http_upstream_hash`就是所谓的注册函数。之所以这样命名（我起得名字）是因为它把_upstream初始化函数_和周边的`upstream`配置注册到了一块。
+另外，注册函数还定义了特定`upstream`块中的`server`指令的一些选项（如`weight=`, `fail_timeout=`），下面是upstream_hash模块的注册函数：
+
+```
+ngx_http_upstream_hash(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+ {
+    ngx_http_upstream_srv_conf_t  *uscf;
+    ngx_http_script_compile_t      sc;
+    ngx_str_t                     *value;
+    ngx_array_t                   *vars_lengths, *vars_values;
+
+    value = cf->args->elts;
+
+    /* the following is necessary to evaluate the argument to "hash" as a $variable */
+    ngx_memzero(&sc, sizeof(ngx_http_script_compile_t));
+
+    vars_lengths = NULL;
+    vars_values = NULL;
+
+    sc.cf = cf;
+    sc.source = &value[1];
+    sc.lengths = &vars_lengths;
+    sc.values = &vars_values;
+    sc.complete_lengths = 1;
+    sc.complete_values = 1;
+
+    if (ngx_http_script_compile(&sc) != NGX_OK) {
+        return NGX_CONF_ERROR;
+    }
+    /* end of $variable stuff */
+
+    uscf = ngx_http_conf_get_module_srv_conf(cf, ngx_http_upstream_module);
+
+    /* the upstream initialization function */
+    uscf->peer.init_upstream = ngx_http_upstream_init_hash;
+
+    uscf->flags = NGX_HTTP_UPSTREAM_CREATE;
+
+    /* OK, more $variable stuff */
+    uscf->values = vars_values->elts;
+    uscf->lengths = vars_lengths->elts;
+
+    /* set a default value for "hash_method" */
+    if (uscf->hash_function == NULL) {
+        uscf->hash_function = ngx_hash_key;
+    }
+
+    return NGX_CONF_OK;
+ }
+```
+
+除了依葫芦画瓢的用来计算`$variable`的代码，剩下的都很简单，就是分配一个回调函数，设置一些标志位。哪些标志位是有效的呢？
+
+  * `NGX_HTTP_UPSTREAM_CREATE`: 让upstream块中有 `server` 指令。我实在想不出那种情形会用不到它。
+  * `NGX_HTTP_UPSTREAM_WEIGHT`: 让`server`指令获取 `weight=` 选项
+  * `NGX_HTTP_UPSTREAM_MAX_FAILS`: 允许 `max_fails=` 选项
+  * `NGX_HTTP_UPSTREAM_FAIL_TIMEOUT`: 允许 `fail_timeout=` 选项
+  * `NGX_HTTP_UPSTREAM_DOWN`: 允许 `down` 选项
+  * `NGX_HTTP_UPSTREAM_BACKUP`: 允许 `backup` 选项
+
+每一个模块都可以访问这些配置值。_一切都取决于模块自己的决定_ 。
+也就是说，`max_fails`不会被自动强制执行；所有的失败逻辑都是由模块作者决定的。过会我们再说这个。目前，我们还没有完成对回调函数的追踪呢。接下来，我们来看upstream初始化函数 (上面的函数中的回调函数`init_upstream` )。
+
+### 5.3. upstream 初始化函数
+
+upstream 初始化函数的目的是，解析主机名，为socket分配空间，分配（另一个）回调函数。下面是upstream_hash：
+
+```
+ngx_int_t
+ngx_http_upstream_init_hash(ngx_conf_t *cf, ngx_http_upstream_srv_conf_t *us)
+{
+    ngx_uint_t                       i, j, n;
+    ngx_http_upstream_server_t      *server;
+    ngx_http_upstream_hash_peers_t  *peers;
+
+    /* set the callback */
+    us->peer.init = ngx_http_upstream_init_upstream_hash_peer;
+
+    if (!us->servers) {
+        return NGX_ERROR;
+    }
+
+    server = us->servers->elts;
+
+    /* figure out how many IP addresses are in this upstream block. */
+    /* remember a domain name can resolve to multiple IP addresses. */
+    for (n = 0, i = 0; i < us->servers->nelts; i++) {
+        n += server[i].naddrs;
+    }
+
+    /* allocate space for sockets, etc */
+    peers = ngx_pcalloc(cf->pool, sizeof(ngx_http_upstream_hash_peers_t)
+            + sizeof(ngx_peer_addr_t) * (n - 1));
+
+    if (peers == NULL) {
+        return NGX_ERROR;
+    }
+
+    peers->number = n;
+
+    /* one port/IP address per peer */
+    for (n = 0, i = 0; i < us->servers->nelts; i++) {
+        for (j = 0; j < server[i].naddrs; j++, n++) {
+            peers->peer[n].sockaddr = server[i].addrs[j].sockaddr;
+            peers->peer[n].socklen = server[i].addrs[j].socklen;
+            peers->peer[n].name = server[i].addrs[j].name;
+        }
+    }
+
+    /* save a pointer to our peers for later */
+    us->peer.data = peers;
+
+    return NGX_OK;
+}
+```
+
+这个函数包含的东西比我们预想的多些。大部分的工作似乎都该被抽象出来，但目前却不是，事实就是如此。
+倒是有一种简化的策略：调用另一个模块的upstream初始化函数，把这些脏活累活（对端的分配等等）都让它干了，然后再覆盖其`us->peer.init`这个回调函数。例子可以参见[http/modules/ngx_http_upstream_ip_hash_module.c](http://www.evanmiller.org/lxr/http/source/http/modules/ngx_http_upstream_ip_hash_module.c#L80)。
+
+在我们这个观点中的关键点是设置_对端初始化函数_的指向，在我们这个例子里是`ngx_http_upstream_init_upstream_hash_peer`。
+
+### 6.4. 对端初始化函数
+
+对端初始化函数每个请求调用一次。它会构造一个数据结构，模块会用这个数据结构来选择合适的后端服务器；这个数据结构保存着和后端交互的重试次数，通过它可以很容易的跟踪链接失败次数或者是计算好的哈希值。这个结构体习惯性地被命名为`ngx_http_upstream_<module name>_peer_data_t`。
+
+另外，对端初始化函数还会构建两个回调函数：
+
+  * `get`: load-balancing 函数
+  * `free`: 对端释放函数 (通常只是在连接完成后更新一些统计信息)
+
+似乎还不止这些，它同时还初始化了一个叫做`tries`的变量。只要`tries`是正数，Nginx将继续重试当前的load-banlancer。当`tries`变为0时，Nginx将放弃重试。一切都取决于`get` 和 `free` 函数如何设置合适的`tries`。
+
+下面是upstream_hash中对端初始化函数的例子：
+```
+static ngx_int_t
+ngx_http_upstream_init_hash_peer(ngx_http_request_t *r,
+    ngx_http_upstream_srv_conf_t *us)
+{
+    ngx_http_upstream_hash_peer_data_t     *uhpd;
+
+    ngx_str_t val;
+
+    /* evaluate the argument to "hash" */
+    if (ngx_http_script_run(r, &val, us->lengths, 0, us->values) == NULL) {
+        return NGX_ERROR;
+    }
+
+    /* data persistent through the request */
+    uhpd = ngx_pcalloc(r->pool, sizeof(ngx_http_upstream_hash_peer_data_t)
+        + sizeof(uintptr_t)
+          * ((ngx_http_upstream_hash_peers_t *)us->peer.data)->number
+                  / (8 * sizeof(uintptr_t)));
+    if (uhpd == NULL) {
+        return NGX_ERROR;
+    }
+
+    /* save our struct for later */
+    r->upstream->peer.data = uhpd;
+
+    uhpd->peers = us->peer.data;
+
+    /* set the callbacks and initialize "tries" to "hash_again" + 1*/
+    r->upstream->peer.free = ngx_http_upstream_free_hash_peer;
+    r->upstream->peer.get = ngx_http_upstream_get_hash_peer;
+    r->upstream->peer.tries = us->retries + 1;
+
+    /* do the hash and save the result */
+    uhpd->hash = us->hash_function(val.data, val.len);
+
+    return NGX_OK;
+}
+```
+
+看上去不错，我们现在已经准备好选择一台upstream服务器了。
+
+### 5.5. 负载均衡函数
+
+主要部分现在才开始。货真价实的哦。模块就是在这里选择upstream服务器的。负载均衡函数的原型看上去是这样的：
+
+```
+static ngx_int_t
+ngx_http_upstream_get__peer(ngx_peer_connection_t *pc, void *data);
+```
+
+`data`是我们存放所关注的客户端连接中有用信息的结构体。`pc`则是要存放我们将要去连接的server的相关信息。负载均衡函数做的事情就是填写`pc->sockaddr`, `pc->socklen`, 和 `pc->name`。
+如果你懂一点网络编程的话，这些东西应该都比较熟悉了；但实际上他们跟我们手头上的任务来比并不算很重要。我们不关心他们代表什么；我们只想知道从哪里找到合适的值来填写他们。
+
+这个函数必须找到一个可用server的列表，挑一个分配给`pc`。我们来看看upstream_hash是怎么做的吧。
+
+之前upstream_hash模块已经通过调用`ngx_http_upstream_init_hash`，把server列表存放在了`ngx_http_upstream_hash_peer_data_t` 这一结构中。这个结构就是现在的`data`:
+```
+    ngx_http_upstream_hash_peer_data_t *uhpd = data;
+```
+
+对端列表现在在`uhpd->peers->peer`中了。我们通过对哈希值与server总数取模来从这个数组中取得最终的对端服务器：
+```
+    ngx_peer_addr_t *peer = &uhpd->peers->peer[uhpd->hash % uhpd->peers->number];
+```
+
+终于大功告成了:
+```
+    pc->sockaddr = peers->sockaddr;
+    pc->socklen  = peers->socklen;
+    pc->name     = &peers->name;
+
+    return NGX_OK;
+```
+
+就是这样！如果load-balancer模块返回 `NGX_OK`，则意味着“来吧，就用这个server”。如果返回的是`NGX_BUSY`，说明所有的后端服务器目前都不可用，此时Nginx应该重试。
+
+但是...我们怎么记录哪些个服务器不可用了？我们如果不想重试了怎么办？
+
+### 5.6. 对端释放函数
+
+对端释放函数在upstream连接就绪之后开始运行，它的目的是跟踪失败。函数原型如下：
+```
+void
+ngx_http_upstream_free__peer(ngx_peer_connection_t *pc, void *data,
+    ngx_uint_t state);
+```
+
+头两个参数和我们在load-balancer函数中看到的一样。第三个参数是一个`state`变量，它表明了当前连接是成功还是失败。
+它可能是`NGX_PEER_FAILED` (连接失败) 和 `NGX_PEER_NEXT` (连接失败或者连接成功但程序返回了错误)按位或的结果。如果它是0则代表连接成功。
+
+这些失败如何处理则由模块的开发者自己定。如果根本不再用，那结果则应存放到`data`中，这是一个指向每个请求自定义的结构体。
+
+但是对端释放函数的关键作用是可以设置`pc->tries`为0来阻止Nginx在 load-balancer 模块中重试。最简单的对端释放函数应该是这样的：
+```
+    pc->tries = 0;
+```
+
+这样就保证了如果发往后端服务器的请求遇到了错误，客户端将得到一个502 Bad Proxy的错误。
+
+这儿还有一个更为复杂的例子，是从upstream_hash模块中拿来的。如果后端连接失败，它会在位向量(叫做 `tried`,一个 `uintptr_t` 类型的数组)中标示失败，然后继续选择一个新的后端服务器直至成功。
+```
+#define ngx_bitvector_index(index) index / (8 * sizeof(uintptr_t))
+#define ngx_bitvector_bit(index) (uintptr_t) 1 << index % (8 * sizeof(uintptr_t))
+
+static void
+ngx_http_upstream_free_hash_peer(ngx_peer_connection_t *pc, void *data,
+    ngx_uint_t state)
+{
+    ngx_http_upstream_hash_peer_data_t  *uhpd = data;
+    ngx_uint_t                           current;
+
+    if (state & NGX_PEER_FAILED
+            && --pc->tries)
+    {
+        /* the backend that failed */
+        current = uhpd->hash % uhpd->peers->number;
+
+       /* mark it in the bit-vector */
+        uhpd->tried[ngx_bitvector_index(current)] |= ngx_bitvector_bit(current);
+
+        do { /* rehash until we're out of retries or we find one that hasn't been tried */
+            uhpd->hash = ngx_hash_key((u_char *)&uhpd->hash, sizeof(ngx_uint_t));
+            current = uhpd->hash % uhpd->peers->number;
+        } while ((uhpd->tried[ngx_bitvector_index(current)] & ngx_bitvector_bit(current)) && --pc->tries);
+    }
+}
+```
+
+因为load-balancer函数只会看新的`uhpd->hash`的值，所以这样是行之有效的。
+
+许多应用程序不提供重试功能，或者在更高层的逻辑中进行了控制。但其实你也看到了，只需这么几行代码这个功能就可以实现了。
+
