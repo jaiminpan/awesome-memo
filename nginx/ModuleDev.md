@@ -1,8 +1,10 @@
 # Emiller的Nginx模块开发指南(中文版)
 
   By [Evan Miller](http://www.evanmiller.org/) Last edit: January 16, 2013
+  [Link](http://www.evanmiller.org/nginx-modules-guide.html)
 
-  By [Jaimin](http://github.com/jaiminpan), update and format change base on Kongch's workout
+  By [Jaimin](http://github.com/jaiminpan), Update and Re-format base on Kongch's workout
+  [Link](https://github.com/jaiminpan/MYWIKI/blob/master/nginx/ModuleDev.md)
 
   By [Kongch](http://www.kongch.com/) @2010年1月5日 0:04am -- 2010-01-06 13:55pm. 
   [Link](https://code.google.com/p/emillers-guide-to-nginx-module-chn/wiki/NginxModuleDevGuide_CHN)
