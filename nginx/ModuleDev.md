@@ -1149,3 +1149,70 @@ ngx_http_upstream_free_hash_peer(ngx_peer_connection_t *pc, void *data,
 
 许多应用程序不提供重试功能，或者在更高层的逻辑中进行了控制。但其实你也看到了，只需这么几行代码这个功能就可以实现了。
 
+## 6. 编写并编译一个新的Nginx模块
+
+至此，你应该可以来找一个现成的Nginx模块来看看，尝试着理解其工作原理。可以试试[src/http/modules/](http://www.evanmiller.org/lxr/http/source/http/modules/)，这里一些现成可用的模块。从里面找一个跟你想要的大概相似的模块深入地看看。看上去很熟悉？没错，应该很熟悉。对照着代码和这篇文章，慢慢理解吧。
+
+但是Emiller并没有写一篇 _深入理解Nginx模块(Balls-In Guide to Reading Nginx Modules)_，真没有。这是一篇 _深入浅出(Balls-Out Guide)_。我们不光只是在理解，我们在编码、创造、和大家分享一起分享。
+
+首先，你需要真正写一个自己的模块。在已有的Nginx源码目录外 (确保你已经有一份最新的nginx源码 [nginx.net](http://nginx.net) )，为你的模块新建一个目录吧。你模块的新目录需要包含下面两个文件:
+
+  * "config"
+  * "ngx_http_<your module>_module.c"
+
+"config" 文件将会被 `./configure` 用到，文件的内容取决于模块的类型。
+
+**filter 模块的 "config":**
+```
+ngx_addon_name=ngx_http_<your module>_module
+HTTP_AUX_FILTER_MODULES="$HTTP_AUX_FILTER_MODULES ngx_http_<your module>_module"
+NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_addon_dir/ngx_http_<your module>_module.c"
+```
+
+**其他模块的 "config":**
+```
+ngx_addon_name=ngx_http_<your module>_module
+HTTP_MODULES="$HTTP_MODULES ngx_http_<your module>_module"
+NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_addon_dir/ngx_http_<your module>_module.c"
+```
+
+对于具体的C语言文件，我推荐先拷贝一份已经存在且功能类似的模块，在重命名为你自己的 "ngx_http_<your module>_module.c"。再参考这篇文章，进行适当的改动以满足需要。
+
+当你想进行编译，只要进入Nginx的目录然后输入：
+
+```
+./configure --add-module=path/to/your/new/module/directory
+```
+
+然后像通常一样输入 `make` 和 `make install`。如果一切顺利，你的模块已经打包进去。就这么简单？不用陷入Nginx源码的泥潭，同样把你的模块放进最新版本的Nginx也是小菜一碟。同样只需要输入 `./configure` 。顺便一提的是，如果你的模块需要动态链接库，需要在 "config" 文件中加入下面代码:
+```
+CORE_LIBS="$CORE_LIBS -lfoo"
+```
+
+`foo` 是你需要用到的动态库。如果你开发了一个有用的模块，请发一个通知给 [Nginx mailing list](http://wiki.codemongers.com/MailinglistSubscribe) 以便分享你的成果.
+
+## 8. 高级话题
+
+本指南只涵盖了Nginx模块开发的基础。想开发更为精巧的模块，一定要去 _[Emiller's Advanced Topics In Nginx Module Development](http://www.evanmiller.org/nginx-modules-guide-advanced.html)_ 看看。
+
+## Appendix A: 代码参考
+
+[Nginx source tree (cross-referenced)](http://www.evanmiller.org/lxr/http/source/)  
+[Nginx module directory (cross-referenced)](http://www.evanmiller.org/lxr/http/source/http/modules/)  
+[Example addon: circle_gif](http://www.evanmiller.org/nginx/ngx_http_circle_gif_module.c.txt)  
+[Example addon: upstream_hash](http://www.evanmiller.org/nginx/ngx_http_upstream_hash_module.c.txt)  
+[Example addon: upstream_fair](http://github.com/gnosek/nginx-upstream-fair/tree/master)  
+
+## Appendix B: Changelog
+
+  * November 11, 2009: Corrected code sample in 4.2.
+  * August 13, 2009: Reorganized, and moved _[Advanced Topics](http://code.google.com/p/emillers-guide-to-nginx-module-chn/nginx-modules-guide-advanced.html)_ to a separate article.
+  * July 23, 2009: Corrected code sample in 3.5.3.
+  * December 24, 2008: Corrected code sample in 3.4.
+  * July 14, 2008: Added information about subrequests; slight reorganization
+  * July 12, 2008: Added [Grzegorz Nosek](http://localdomain.pl/)'s guide to shared memory
+  * July 2, 2008: Corrected "config" file for filter modules; rewrote introduction; added TODO section
+  * May 28, 2007: Changed the load-balancing example to the simpler upstream_hash module
+  * May 19, 2007: Corrected bug in body filter example
+  * May 4, 2007: Added information about load-balancers
+  * April 28, 2007: Initial draft
