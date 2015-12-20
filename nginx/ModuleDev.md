@@ -87,4 +87,107 @@
  难以置信！有这么多的功能任你处置，而你只需仅仅通过多组有用的钩子（由函数指针组成的结构体）和相应的实现函数。让我们开始接触一些模块吧。
 
 
+## 2. Nginx模块的组成
+
+我说过，Nginx模块的构建是很灵活的。这一节讲描述的东西会经常出现。它可以帮助你理解模块，也可以作为开发模块的手册。
+
+### 2.1. 模块的配置结构
+
+模块的配置struct有三种，分别是main，server和location。绝大多数模块仅需要一个location配置。
+名称约定如下：`ngx_http_<module name>_(main|srv|loc)_conf_t`. 这里有一个dav模块的例子：
+
+```
+typedef struct {
+    ngx_uint_t  methods;
+    ngx_flag_t  create_full_put_path;
+    ngx_uint_t  access;
+} ngx_http_dav_loc_conf_t;
+```
+
+注意到上面展示了Nginx的一些特殊类型(`ngx_uint_t` 和 `ngx_flag_t`); 这些只是基本类型的别名而已。(如果想知道具体是什么的别名，可以参考 [core/ngx_config.h](http://www.evanmiller.org/lxr/http/source/core/ngx_config.h#L79) ).
+
+这些类型用在配置结构体中的情形很多。
+
+
+### 2.2. 模块指令
+
+模块的指令是定义在一个叫做`ngx_command_t`的静态数组中的。下面举个来自我自己写的小模块中的例子，来告诉你模块指令是如何声明的：
+
+```
+static ngx_command_t  ngx_http_circle_gif_commands[] = {
+    { ngx_string("circle_gif"),
+      NGX_HTTP_LOC_CONF|NGX_CONF_NOARGS,
+      ngx_http_circle_gif,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      0,
+      NULL },
+
+    { ngx_string("circle_gif_min_radius"),
+      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+      ngx_conf_set_num_slot,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      offsetof(ngx_http_circle_gif_loc_conf_t, min_radius),
+      NULL },
+      ...
+      ngx_null_command
+};
+```
+
+下面是结构体`ngx_command_t`(静态数组里的每一个元素)的定义 , 来自[core/ngx_conf_file.h](http://www.evanmiller.org/lxr/http/source/core/ngx_conf_file.h#L77):
+
+```
+struct ngx_command_t {
+    ngx_str_t             name;
+    ngx_uint_t            type;
+    char               *(*set)(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
+    ngx_uint_t            conf;
+    ngx_uint_t            offset;
+    void                 *post;
+};
+```
+
+看起来结构的成员变量多了点，不过它们都各有用处。
+
+`name` 是指令的字符串名（顾名思义就是指令名称），不能包含空格. 它的类型是`ngx_str_t`, 通常都是以像(e.g.) `ngx_str("proxy_pass")`这样的方式来初始化. 注意： `ngx_str_t` 包含一个存放字符串内容的`data`字段，和一个存放字符串长度的`len`字段。Nginx广泛地使用这个类型来存放字符串。
+
+`type`是标识的集合，表明这个指令在哪里出现是合法的、指令的参数有几个。应用中，标识一般是下面多个值的二进制或(bitwise-OR)组成：
+
+  * `NGX_HTTP_MAIN_CONF`: 指令出现在main配置部分是合法的
+  * `NGX_HTTP_SRV_CONF`: 指令在server配置部分出现是合法的 config
+  * `NGX_HTTP_LOC_CONF`: 指令在location配置部分出现是合法的
+  * `NGX_HTTP_UPS_CONF`: 指令在upstream配置部分出现是合法的
+
+  * `NGX_CONF_NOARGS`: 指令没有参数
+  * `NGX_CONF_TAKE1`: 指令读入1个参数
+  * `NGX_CONF_TAKE2`: 指令读入2个参数
+  * ...
+  * `NGX_CONF_TAKE7`: 指令读入7个参数
+
+  * `NGX_CONF_FLAG`: 指令读入1个布尔型数据 ("on" or "off")
+  * `NGX_CONF_1MORE`: 指令至少读入1个参数
+  * `NGX_CONF_2MORE`: 指令至少读入2个参数
+
+这里还有很多其他的选项：参考[core/ngx_conf_file.h](http://www.evanmiller.org/lxr/http/source/core/ngx_conf_file.h#L1)。
+
+结构体成员 `set` 是一个函数指针，它指向的函数用来进行模块配置；这个设定函数一般用来将配置文件中的参数传递给程序，并保存在配置结构体中。设定函数有三个入参：
+
+  1. 指向结构体 `ngx_conf_t` 的指针, 这个结构体里包含需要传递给指令的参数
+  2. 指向结构体 `ngx_command_t` 的指针
+  3. 指向模块自定义配置结构体的指针
+
+设定函数会在遇到指令时触发，Nginx提供了多个函数用来保存特定类型的数据，这些函数包含有：
+
+  * `ngx_conf_set_flag_slot`: 将 "on" or "off" 转换成 1 or 0
+  * `ngx_conf_set_str_slot`: 将字符串保存为 `ngx_str_t`
+  * `ngx_conf_set_num_slot`: 解析一个数字并保存为`int`
+  * `ngx_conf_set_size_slot`: 解析一个数据大小(如："8k", "1m") 并保存为`size_t`
+
+当然还有其他的，参考[core/ngx_conf_file.h](http://www.evanmiller.org/lxr/http/source/core/ngx_conf_file.h#L329)。如果你觉得现有这些内置的函数还不能满足你，当然也可以传入自己的函数引用。
+
+这些内置函数是如何知道把数据存放在哪里的呢？这就是接下来 `ngx_command_t` 的两个结构体成员 `conf` 和 `offset` 要做的事了. `conf` 告诉Nginx把数据存在模块的哪个配置中，是 main 配置、server 配置, 还是 location 配置 ？(通过 `NGX_HTTP_MAIN_CONF_OFFSET`, `NGX_HTTP_SRV_CONF_OFFSET`, 或者 `NGX_HTTP_LOC_CONF_OFFSET`). `offset` 确定到底是保存在结构体的哪个位置。
+
+_最后_, `post`指向模块在读配置的时候需要的一些零碎变量。多数情况下它设为NULL。
+
+`ngx_command_t`数组以设置 `ngx_null_command` 为最后一个元素当作结尾（就好像字符串以'\0'为终结符一样）。
+
 
