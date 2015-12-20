@@ -152,35 +152,35 @@ struct ngx_command_t {
 
 `type`是标识的集合，表明这个指令在哪里出现是合法的、指令的参数有几个。应用中，标识一般是下面多个值的二进制或(bitwise-OR)组成：
 
-  * `NGX_HTTP_MAIN_CONF`: 指令出现在main配置部分是合法的
-  * `NGX_HTTP_SRV_CONF`: 指令在server配置部分出现是合法的 config
-  * `NGX_HTTP_LOC_CONF`: 指令在location配置部分出现是合法的
-  * `NGX_HTTP_UPS_CONF`: 指令在upstream配置部分出现是合法的
+    * `NGX_HTTP_MAIN_CONF`: 指令出现在main配置部分是合法的
+    * `NGX_HTTP_SRV_CONF`: 指令在server配置部分出现是合法的 config
+    * `NGX_HTTP_LOC_CONF`: 指令在location配置部分出现是合法的
+    * `NGX_HTTP_UPS_CONF`: 指令在upstream配置部分出现是合法的
 
-  * `NGX_CONF_NOARGS`: 指令没有参数
-  * `NGX_CONF_TAKE1`: 指令读入1个参数
-  * `NGX_CONF_TAKE2`: 指令读入2个参数
-  * ...
-  * `NGX_CONF_TAKE7`: 指令读入7个参数
+    * `NGX_CONF_NOARGS`: 指令没有参数
+    * `NGX_CONF_TAKE1`: 指令读入1个参数
+    * `NGX_CONF_TAKE2`: 指令读入2个参数
+    * ...
+    * `NGX_CONF_TAKE7`: 指令读入7个参数
 
-  * `NGX_CONF_FLAG`: 指令读入1个布尔型数据 ("on" or "off")
-  * `NGX_CONF_1MORE`: 指令至少读入1个参数
-  * `NGX_CONF_2MORE`: 指令至少读入2个参数
+    * `NGX_CONF_FLAG`: 指令读入1个布尔型数据 ("on" or "off")
+    * `NGX_CONF_1MORE`: 指令至少读入1个参数
+    * `NGX_CONF_2MORE`: 指令至少读入2个参数
 
 这里还有很多其他的选项：参考[core/ngx_conf_file.h](http://www.evanmiller.org/lxr/http/source/core/ngx_conf_file.h#L1)。
 
 结构体成员 `set` 是一个函数指针，它指向的函数用来进行模块配置；这个设定函数一般用来将配置文件中的参数传递给程序，并保存在配置结构体中。设定函数有三个入参：
 
-  1. 指向结构体 `ngx_conf_t` 的指针, 这个结构体里包含需要传递给指令的参数
-  2. 指向结构体 `ngx_command_t` 的指针
-  3. 指向模块自定义配置结构体的指针
+    1. 指向结构体 `ngx_conf_t` 的指针, 这个结构体里包含需要传递给指令的参数
+    2. 指向结构体 `ngx_command_t` 的指针
+    3. 指向模块自定义配置结构体的指针
 
 设定函数会在遇到指令时触发，Nginx提供了多个函数用来保存特定类型的数据，这些函数包含有：
 
-  * `ngx_conf_set_flag_slot`: 将 "on" or "off" 转换成 1 or 0
-  * `ngx_conf_set_str_slot`: 将字符串保存为 `ngx_str_t`
-  * `ngx_conf_set_num_slot`: 解析一个数字并保存为`int`
-  * `ngx_conf_set_size_slot`: 解析一个数据大小(如："8k", "1m") 并保存为`size_t`
+    * `ngx_conf_set_flag_slot`: 将 "on" or "off" 转换成 1 or 0
+    * `ngx_conf_set_str_slot`: 将字符串保存为 `ngx_str_t`
+    * `ngx_conf_set_num_slot`: 解析一个数字并保存为`int`
+    * `ngx_conf_set_size_slot`: 解析一个数据大小(如："8k", "1m") 并保存为`size_t`
 
 当然还有其他的，参考[core/ngx_conf_file.h](http://www.evanmiller.org/lxr/http/source/core/ngx_conf_file.h#L329)。如果你觉得现有这些内置的函数还不能满足你，当然也可以传入自己的函数引用。
 
@@ -190,4 +190,156 @@ _最后_, `post`指向模块在读配置的时候需要的一些零碎变量。�
 
 `ngx_command_t`数组以设置 `ngx_null_command` 为最后一个元素当作结尾（就好像字符串以'\0'为终结符一样）。
 
+### 2.3. 模块上下文
 
+静态的`ngx_http_module_t`结构体，包含一大坨函数指针，用来创建和合并三段配置(main,server,location)，命名方式一般是：`ngx_http_<module name>_module_ctx`。 这些函数引用依次是:
+
+    * preconfiguration 在读入配置前调用
+    * postconfiguration 在读入配置后调用
+    * create_main_conf 在创建main配置时调用（比如，用来分配空间和设置默认值）
+    * init_main_conf 在初始化main配置时调用（比如，把原来的默认值用nginx.conf读到的值来覆盖）
+    * init_main_conf 在创建server配置时调用
+    * merge_srv_conf 合并server和main配置时调用
+    * create_loc_conf 创建location配置时调用
+    * merge_loc_conf 合并location和server配置时调用
+
+ 函数的入参各不相同，取决于他们具体要做的事情。这里是结构体的定义，来自[http/ngx_http_config.h](http://www.evanmiller.org/lxr/http/source/http/ngx_http_config.h#L22)：
+
+```
+typedef struct {
+    ngx_int_t   (*preconfiguration)(ngx_conf_t *cf);
+    ngx_int_t   (*postconfiguration)(ngx_conf_t *cf);
+
+    void       *(*create_main_conf)(ngx_conf_t *cf);
+    char       *(*init_main_conf)(ngx_conf_t *cf, void *conf);
+
+    void       *(*create_srv_conf)(ngx_conf_t *cf);
+    char       *(*merge_srv_conf)(ngx_conf_t *cf, void *prev, void *conf);
+
+    void       *(*create_loc_conf)(ngx_conf_t *cf);
+    char       *(*merge_loc_conf)(ngx_conf_t *cf, void *prev, void *conf);
+} ngx_http_module_t;
+```
+
+可以把你不需要的函数设置为NULL，Nginx会忽略掉他们。
+
+绝大多数的 handler 只使用最后两个：一个用来为特定location：配置分配内存，(叫做 `ngx_http_<module name>_create_loc_conf`)。
+另一个用来设定默认值以及合并继承过来的配置值(叫做 `ngx_http_<module name>_merge_loc_conf`)。合并函数同时还会检查配置的有效性，如果有错误，则server的启动将被挂起。
+
+下面是一个使用模块上下文结构体的例子:
+
+```
+static ngx_http_module_t  ngx_http_circle_gif_module_ctx = {
+    NULL,                          /* preconfiguration */
+    NULL,                          /* postconfiguration */
+
+    NULL,                          /* create main configuration */
+    NULL,                          /* init main configuration */
+
+    NULL,                          /* create server configuration */
+    NULL,                          /* merge server configuration */
+
+    ngx_http_circle_gif_create_loc_conf,  /* create location configuration */
+    ngx_http_circle_gif_merge_loc_conf /* merge location configuration */
+};
+```
+
+现在开始讲得更深一点。这些配置回调函数看其来很像，所有模块都类似，而且Nginx的API都会用到这个部分，所以值得好好看看。
+
+#### 2.3.1. create_loc_conf
+
+下面这段摘自我自己写的模块[circle_gif](http://www.riceonfire.org/emiller/ngx_http_circle_gif_module.c.txt 源代码)，create_loc_conf的骨架大概就是这个样子. 它的入参是(`ngx_conf_t`)，返回值是模块配置结构体(在这里是`ngx_http_circle_gif_loc_conf_t`)。
+
+```
+static void *
+ngx_http_circle_gif_create_loc_conf(ngx_conf_t *cf)
+{
+    ngx_http_circle_gif_loc_conf_t  *conf;
+
+    conf = ngx_pcalloc(cf->pool, sizeof(ngx_http_circle_gif_loc_conf_t));
+    if (conf == NULL) {
+        return NGX_CONF_ERROR;
+    }
+    conf->min_radius = NGX_CONF_UNSET_UINT;
+    conf->max_radius = NGX_CONF_UNSET_UINT;
+    return conf;
+}
+```
+
+首先需要指出的是Nginx的内存分配；只要使用了 `ngx_palloc` (`malloc`的一个封装) 或者 `ngx_pcalloc` (`calloc`的封装)，就不用担心内存的释放了（nigix的内存管理机制会替你释放内存）。
+
+UNSET可能的常量有`NGX_CONF_UNSET_UINT`， `NGX_CONF_UNSET_PTR`， `NGX_CONF_UNSET_SIZE`， `NGX_CONF_UNSET_MSEC`，以及无所不包的`NGX_CONF_UNSET`，UNSET让合并函数知道变量是需要覆盖的。
+
+#### 2.3.2. merge_loc_conf
+
+下面的例子是我的模块circle_gif中的合并函数：
+
+```
+static char *
+ngx_http_circle_gif_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
+{
+    ngx_http_circle_gif_loc_conf_t *prev = parent;
+    ngx_http_circle_gif_loc_conf_t *conf = child;
+
+    ngx_conf_merge_uint_value(conf->min_radius, prev->min_radius, 10);
+    ngx_conf_merge_uint_value(conf->max_radius, prev->max_radius, 20);
+
+    if (conf->min_radius < 1) {
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+            "min_radius must be equal or more than 1");
+        return NGX_CONF_ERROR;
+    }
+    if (conf->max_radius < conf->min_radius) {
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+            "max_radius must be equal or more than min_radius");
+        return NGX_CONF_ERROR;
+    }
+
+    return NGX_CONF_OK;
+}
+```
+
+这里的需要注意的是Nginx提供了一些好用的合并函数用来合并不同类型的数据(`ngx_conf_merge_<data type>_value`)，这类函数的入参是：
+
+    1. _当前_ location的变量值
+    2. 如果第一个参数没有被设置而采用的值
+    3. 如果第一第二个参数都没有被设置而采用的值
+
+结果会被保存在第一个参数中。能用的合并函数包括 `ngx_conf_merge_size_value`, `ngx_conf_merge_msec_value` 等等。可参见[core/ngx_conf_file.h](http://www.evanmiller.org/lxr/http/source/core/ngx_conf_file.h#L254).
+
+    问: 第一个参数是传值的，那如何能做到将结果保存到第一个参数中？
+    答: 这些函数都是由预处理命令定义的（在真正编译之前，它们会被扩展成一些if语句）
+
+需要注意到错误的产生。函数会往log文件写一些东西，同时返回`NGX_CONF_ERROR`。这个返回值会将server的启动挂起。（因为被标示为`NGX_LOG_EMERG`级别，所以错误同时还会输出到标准输出。
+参考[core/ngx_log.h](http://www.evanmiller.org/lxr/http/source/core/ngx_log.h#L1)列出了所有的日志级别。）
+
+#### 2.4. 模块定义
+
+接下来我们间接地介绍更深一层：结构体`ngx_module_t`。该结构体变量命名方式为`ngx_http_<module name>_module`。它包含模块的内容和指令执行方式，同时也还包含一些回调函数（退出线程，退出进程，等等）。
+模块定义在有的时候会被用作查找的关键字，来查找与特定模块相关联的数据。模块定义通常像是这样：
+
+```
+ngx_module_t  ngx_http_<module name>_module = {
+    NGX_MODULE_V1,
+    &ngx_http_<module name>_module_ctx, /* module context */
+    ngx_http_<module name>_commands,   /* module directives */
+    NGX_HTTP_MODULE,               /* module type */
+    NULL,                          /* init master */
+    NULL,                          /* init module */
+    NULL,                          /* init process */
+    NULL,                          /* init thread */
+    NULL,                          /* exit thread */
+    NULL,                          /* exit process */
+    NULL,                          /* exit master */
+    NGX_MODULE_V1_PADDING
+};
+```
+
+...仅仅替换掉`<module name>`就可以了。
+模块可以添加一些回调函数来处理线程/进程的创建和销毁，但是绝大多数模块都用NULL忽略这些东东。
+(关于这些回调函数的入参，可以参考[core/ngx_conf_file.h](http://www.evanmiller.org/lxr/http/source/core/ngx_conf_file.h#L110) ) 
+
+#### 2.5. 模块装载
+
+模块的装载方式取决于模块的类型：handler、filter还是load-balancer。
+所以具体的装载细节将留在其各自的章节中再做介绍。
