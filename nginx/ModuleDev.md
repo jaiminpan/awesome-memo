@@ -678,3 +678,166 @@ ngx_http_circle_gif(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 这里可以分为两步：首先，得到当前location的“core”结构体，再分配给它一个handler。很简单，不是吗？
 
 我已经把我知道的关于hanler模块的东西全交代清楚了，现在可以来说说输出过滤链上的filter模块了。
+
+
+## 4. Filters
+
+Filter操作handler生成的响应。头部filter操作HTTP头，body filter操作响应的内容。
+
+### 4.1. 剖析Header Filter
+
+头部Filter由三个步骤组成：
+
+  1. 决定是否处理响应
+  2. 处理响应
+  3. 调用下一个filter
+
+举个例子，比如有一个简化版本的“不改变”头部filter：如果客户请求头中的“If-Modified-Since”和响应头中的“Last-Modified”相符，它把响应状态设置成“304 Not Modified”。注意这个头部filter只读入一个参数：`ngx_http_request_t`结构体，而我们可以通过它操作到客户请求头和一会将被发送的响应消息头。
+```
+static
+ngx_int_t ngx_http_not_modified_header_filter(ngx_http_request_t *r)
+{
+    time_t  if_modified_since;
+
+    if_modified_since = ngx_http_parse_time(r->headers_in.if_modified_since->value.data,
+                              r->headers_in.if_modified_since->value.len);
+
+/* step 1: decide whether to operate */
+    if (if_modified_since != NGX_ERROR &&
+        if_modified_since == r->headers_out.last_modified_time) {
+
+/* step 2: operate on the header */
+        r->headers_out.status = NGX_HTTP_NOT_MODIFIED;
+        r->headers_out.content_type.len = 0;
+        ngx_http_clear_content_length(r);
+        ngx_http_clear_accept_ranges(r);
+    }
+
+/* step 3: call the next filter */
+    return ngx_http_next_header_filter(r);
+}
+```
+
+结构`headers_out`和我们在hander那一节中看到的是一样的，（参考[http/ngx_http_request.h](http://www.evanmiller.org/lxr/http/source/http/ngx_http_request.h#L220) ），也可以随意处置。
+
+### 4.2. 剖析Body Filter
+
+因为body filter一次只能操作一个buffer（链表），这使得编写body filter需要一定的技巧。模块需要知道什么时候可以_覆盖_输入buffer，用新申请的buffer_替换_已有的，或者在现有的某个buffer前或后_插入_一个新buffer。
+
+有时候模块会收到许多buffer使得它不得不操作一个_不完整的链表_，这使得事情变得更加复杂了。而更加不幸的是，Nginx没有为我们提供上层的API来操作buffer链表，所以body filter是比较难懂（当然也比较难写）。但是，有些操作你还是可以看出来的。
+
+一个body filter原型大概是这个样子（例子代码从Nginx源代码的“chunked” filter中取得）：
+```
+static ngx_int_t ngx_http_chunked_body_filter(ngx_http_request_t *r, ngx_chain_t *in);
+```
+
+第一个参数是request结构体，第二个参数则是指向当前部分链表头的指针（可能包含0，1，或更多的buffer）。
+
+再来举个简单的例子。假设我们想要在每个请求之后插入文本"<l!-- Served by Nginx -->"。首先，我们需要判断给我们的 buffer 链表中是否已经包含响应的最终buffer。就像之前我说的，这里没有简便好用的API，所以我们只能自己来写个循环：
+```
+    ngx_chain_t *chain_link;
+    int chain_contains_last_buffer = 0;
+
+    chain_link = in;
+    for ( ; ; ) {
+        if (chain_link->buf->last_buf)
+            chain_contains_last_buffer = 1;
+        if (chain_link->next == NULL)
+            break;
+        chain_link = chain_link->next;
+    }
+```
+
+如果我们没有最后的buffer，就返回：
+```
+    if (!chain_contains_last_buffer)
+        return ngx_http_next_body_filter(r, in);
+```
+
+很好，现在最后一个buffer已经存在链表中了。接下来我们分配一个新buffer：
+```
+    ngx_buf_t    *b;
+    b = ngx_calloc_buf(r->pool);
+    if (b == NULL) {
+        return NGX_ERROR;
+    }
+```
+
+把数据放进去:
+```
+    b->pos = (u_char *) "<!-- Served by Nginx -->";
+    b->last = b->pos + sizeof("<!-- Served by Nginx -->") - 1;
+```
+
+把这个buffer挂在新的链表上：
+```
+    ngx_chain_t   *added_link;
+
+    added_link = ngx_alloc_chain_link(r->pool);
+    if (added_link == NULL)
+        return NGX_ERROR;
+
+    added_link->buf = b;
+    added_link->next = NULL;
+```
+
+最后，把这个新链表挂在先前链表的末尾：
+```
+    chain_link->next = added_link;
+```
+
+并根据变化重置变量"last_buf"的值：
+```
+    chain_link->buf->last_buf = 0;
+    added_link->buf->last_buf = 1;
+```
+
+再将修改过的链表传递给下一个输出过滤函数：
+```
+    return ngx_http_next_body_filter(r, in);
+```
+
+编写这个函数比实际的具体工作消耗了更多的精力，简单如mod_perl(`$response->body =~ s/$/<!-- Served by mod_perl -->/`)，但是buffer链确实是一个强大的框架，它可以让程序员渐进地处理数据，这使得客户端可以尽可能早地得到一些响应。
+但是依我来看，buffer链表实在需要一个更为干净的接口，这样程序员也可以避免操作不一致状态的链表。但是目前为止，所有的风险都得程序员自己控制。
+
+### 4.3. Filter的装载
+
+Filter在回调函数post-configuration中被装载。header filter和body filter都是在这里被装载的。
+
+我们以chunked filter模块为例来具体看看：
+```
+static ngx_http_module_t  ngx_http_chunked_filter_module_ctx = {
+    NULL,                                  /* preconfiguration */
+    ngx_http_chunked_filter_init,          /* postconfiguration */
+  ...
+};
+```
+
+`ngx_http_chunked_filter_init`中的具体实现如下:
+```
+static ngx_int_t
+ngx_http_chunked_filter_init(ngx_conf_t *cf)
+{
+    ngx_http_next_header_filter = ngx_http_top_header_filter;
+    ngx_http_top_header_filter = ngx_http_chunked_header_filter;
+
+    ngx_http_next_body_filter = ngx_http_top_body_filter;
+    ngx_http_top_body_filter = ngx_http_chunked_body_filter;
+
+    return NGX_OK;
+}
+```
+
+发生了什么呢？好吧，如果你还记得，filter模块组成了一条”CHAIN OF RESPONSIBILITY“。当handler生成一个响应后，2个函数被调用：`ngx_http_output_filter`它调用全局函数`ngx_http_top_body_filter`；以及`ngx_http_send_header` 它调用全局函数`ngx_top_header_filter`。
+
+`ngx_http_top_body_filter` 和 `ngx_http_top_header_filter`是body和header各自的头部filter链的”链表头“。链表上的每一个”连接“都保存着链表中下一个连接的函数引用(分别是 `ngx_http_next_body_filter` 和 `ngx_http_next_header_filter`)。
+当一个filter完成工作之后，它只需要调用下一个filter，直到一个特殊的被定义成”写(write)“的filter被调用，这个”写“filter的作用是包装最终的HTTP响应。你在这个filter_init函数中看到的就是，模块把自己添加到filter链表中；它先把旧的”头部“filter当做是自己的”下一个“，然后再声明”它自己“是”头部“filter。（因此，最后一个被添加的filter会第一个被执行。）
+
+    边注: 这到底是怎么工作的?
+
+    每个filter要么返回一个错误码，要么用调用
+    `return ngx_http_next_body_filter();`
+
+    因此，如果filter顺利链执行到了链尾（那个特别定义的的”写“filter），将返回一个"OK"响应，
+    但如果执行过程中遇到了错误，链将被砍断，同时Nginx将给出一个错误的信息。
+    这是一个单向的，错误快速返回的，只使用函数引用实现的链表。帅啊！
