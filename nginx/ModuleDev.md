@@ -343,3 +343,338 @@ ngx_module_t  ngx_http_<module name>_module = {
 
 模块的装载方式取决于模块的类型：handler、filter还是load-balancer。
 所以具体的装载细节将留在其各自的章节中再做介绍。
+
+## 3. Handlers
+
+接下来我们把模块的细节放到显微镜下面来看，它们到底怎么运行的。
+
+### 3.1. 剖析Handler(非代理 Non-proxying)
+
+Handler一般做4件事：获取location配置，生成合适的响应，发送响应头，发送响应体。Handler有一个参数，即request结构体。request结构体包含很多关于客户请求的有用信息，比如说请求方法，URI，请求头等等。我们一个个地来看。
+
+#### 3.1.1. 获取location配置
+
+这部分很简单。只需要调用 `ngx_http_get_module_loc_conf`，传入当前请求的结构体和模块定义即可。下面是我的`circle gif` handler的相关部分：
+
+```
+static ngx_int_t
+ngx_http_circle_gif_handler(ngx_http_request_t *r)
+{
+    ngx_http_circle_gif_loc_conf_t  *circle_gif_config;
+    circle_gif_config = ngx_http_get_module_loc_conf(r, ngx_http_circle_gif_module);
+    ...
+```
+
+现在我们就可以访问之前在合并函数中设置的所有变量了。
+
+#### 3.1.2. 生成响应
+
+这才是模块真正干活的部分，相当有趣。
+
+这里要用到请求结构体，主要是这些结构体成员：
+
+```
+typedef struct {
+...
+/* the memory pool, used in the ngx_palloc functions */
+    ngx_pool_t                       *pool;
+    ngx_str_t                         uri;
+    ngx_str_t                         args;
+    ngx_http_headers_in_t             headers_in;
+
+...
+} ngx_http_request_t;
+
+```
+
+`uri` 是请求的路径, e.g. "/query.cgi"。  
+`args` 请求串参数中问号后面的参数 (e.g. "name=john")。  
+`headers_in` 包含有很多有用的东西，比如说cookie啊，浏览器信息啊什么的，但是许多模块可能用不到这些东东。
+如果你感兴趣的话，可以参考[http/ngx_http_request.h](http://www.evanmiller.org/lxr/http/source/http/ngx_http_request.h#L158)。  
+
+用这些信息来生成输出应该是足够了。完整的`ngx_http_request_t`结构体定义来自[http/ngx_http_request.h](http://www.evanmiller.org/lxr/http/source/http/ngx_http_request.h#L316)。
+
+#### 3.1.3. 发送响应头
+
+响应头存放在结构体`headers_out`中，它的引用存放在请求结构体中。
+Handler设置相应的响应头的值，然后调用`ngx_http_send_header(r)`。`headers_out`中比较有用的是：
+
+```
+typedef stuct {
+...
+    ngx_uint_t                        status;
+    size_t                            content_type_len;
+    ngx_str_t                         content_type;
+    ngx_table_elt_t                  *content_encoding;
+    off_t                             content_length_n;
+    time_t                            date_time;
+    time_t                            last_modified_time;
+..
+} ngx_http_headers_out_t;
+```
+
+(剩下的可以在 [http/ngx_http_request.h](http://www.evanmiller.org/lxr/http/source/http/ngx_http_request.h#L220)找到。)
+
+举例来说，如果一个模块要设置Content-Type 为 "image/gif"，Content-Length 为 100，并返回 HTTP 200 OK 的响应，代码应当是这样的:
+```
+    r->headers_out.status = NGX_HTTP_OK;
+    r->headers_out.content_length_n = 100;
+    r->headers_out.content_type.len = sizeof("image/gif") - 1;
+    r->headers_out.content_type.data = (u_char *) "image/gif";
+    ngx_http_send_header(r);
+```
+
+上面的设定方式针对大多数参数都是有效的。但一些头部的变量设定要比上面的例子要麻烦。
+比如，`content_encoding` 还含有类型`(ngx_table_elt_t*)`，所以必须先为此分配空间。可以用一个叫做`ngx_list_push`的函数来做，它传入一个`ngx_list_t`（与数组类似），返回一个list中的新成员（类型是`ngx_table_elt_t`）。下面的代码设置了Content-Encoding为"deflate"并发送了响应头：
+
+```
+    r->headers_out.content_encoding = ngx_list_push(&r->headers_out.headers);
+    if (r->headers_out.content_encoding == NULL) {
+        return NGX_ERROR;
+    }
+    r->headers_out.content_encoding->hash = 1;
+    r->headers_out.content_encoding->key.len = sizeof("Content-Encoding") - 1;
+    r->headers_out.content_encoding->key.data = (u_char *) "Content-Encoding";
+    r->headers_out.content_encoding->value.len = sizeof("deflate") - 1;
+    r->headers_out.content_encoding->value.data = (u_char *) "deflate";
+    ngx_http_send_header(r);
+```
+
+当头部有多个值时，这个机制常常被用到。它（理论上讲）使得过滤模块添加、删除某个值而保留其他值的时候更加容易，在操纵字符串的时候，不需要把字符串重新排序。
+
+#### 3.1.4. 发送响应体
+
+现在模块已经生成了一个响应，并存放在了内存中。接下来它需要将这个响应分配给一个特定的缓冲区，然后把这个缓冲区加入到 _链表_ ，_然后_ 调用链表中“发送响应体”的函数。
+
+链表在这里起什么作用呢？Nginx中，handler模块（其实filter模块也是）生成响应到buffer中是同时完成的；链表中的每个元素都有指向下一个元素的指针，如果是NULL则说明链表到头了。简单起见，我们假设只有一个buffer。
+
+首先，模块需要先声明buffer和链表：
+```
+    ngx_buf_t    *b;
+    ngx_chain_t   out;
+```
+
+接着，需要给buffer分配空间，并将我们的响应数据指向它：
+```
+    b = ngx_pcalloc(r->pool, sizeof(ngx_buf_t));
+    if (b == NULL) {
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+            "Failed to allocate response buffer.");
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
+
+    b->pos = some_bytes; /* first position in memory of the data */
+    b->last = some_bytes + some_bytes_length; /* last position */
+
+    b->memory = 1; /* content is in read-only memory */
+    /* (i.e., filters should copy it rather than rewrite in place) */
+
+    b->last_buf = 1; /* there will be no more buffers in the request */
+```
+
+现在就可以把数据挂在链表上了：
+```
+    out.buf = b;
+    out.next = NULL;
+```
+
+最后，我们发送这个响应体，返回值是经过filter链表处理后的状态:
+```
+    return ngx_http_output_filter(r, &out);
+```
+
+Buffer链是Nginx IO模型中的关键部分，你得比较熟悉它的工作方式。
+
+    问: 为什么buffer还需要有个`last_buf`变量啊，我们不是可以通过判断next是否是NULL来知道哪个是链表的最末端了吗？
+    答: 链表可能是不完整的，比如说，当有多个buffer的时候，并不是所有的buffer都属于当前的请求和响应。
+        所以有些buffer可能是buffer链表的表尾，但是不是请求的结束。这给我们引入了接下来的内容……
+
+
+### 3.2. 剖析Upstream(又称 Proxy) Handler
+
+我已经帮你了解了如何让你的handler来产生响应。有些时候你可以用一小段C代码就可以得到响应，但是通常情况下你需要同另外一台server打交道（比如你正在写一个用来实现某种网络协议的模块）。
+你当然可以自己实现一套网络编程的东东，但是如果你只收到部分的响应，需要等待余下的响应数据，你会怎么办？你不会想阻塞整个事件处理循环吧？这样会毁掉Nginx的良好性能！
+幸运的是，Nginx允许你在它处理后端服务器（叫做"upstreams"）的机制上加入你的回调函数,因此你的模块将可以和其他的server通信,同时还不会妨碍其他的请求。
+
+这一节将介绍模块如何和一个upstream通信，如 Memcached，FastCGI，或者另一个 HTTP server。
+
+#### 3.2.1. Upstream 回调函数概要
+
+与其他模块的回调处理函数不一样，upstream模块的处理函数几乎不做“具体的”事。它_压根不_调用`ngx_http_output_filter`。它仅仅是设置当upstream server可读写时所触发的回调函数。
+实际上它有6个可用的钩子(hooks)：
+
+    `create_request` 生成发送到upstream server的请求缓冲（或者一条缓冲链）
+    `reinit_request` 在与后端服务器连接被重置的情况下被调用（在`create_request` 被第二次调用之前）
+    `process_header` 处理upstream 响应的第一个bit，通常是保存一个指向upstream "payload"的指针
+    `abort_request` 在客户端放弃请求时被调用
+    `finalize_request` 在Nginx完成从upstream读取数据后调用
+    `input_filter` 这是一个消息体的filter，用来处理响应消息体(例如把尾部删除)
+
+这些钩子是怎么挂载上去的呢？下面是一个例子，简单版本的代理模块处理函数：
+```
+static ngx_int_t
+ngx_http_proxy_handler(ngx_http_request_t *r)
+{
+    ngx_int_t                   rc;
+    ngx_http_upstream_t        *u;
+    ngx_http_proxy_loc_conf_t  *plcf;
+
+    plcf = ngx_http_get_module_loc_conf(r, ngx_http_proxy_module);
+
+/* set up our upstream struct */
+    u = ngx_pcalloc(r->pool, sizeof(ngx_http_upstream_t));
+    if (u == NULL) {
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
+
+    u->peer.log = r->connection->log;
+    u->peer.log_error = NGX_ERROR_ERR;
+
+    u->output.tag = (ngx_buf_tag_t) &ngx_http_proxy_module;
+
+    u->conf = &plcf->upstream;
+
+/* attach the callback functions */
+    u->create_request = ngx_http_proxy_create_request;
+    u->reinit_request = ngx_http_proxy_reinit_request;
+    u->process_header = ngx_http_proxy_process_status_line;
+    u->abort_request = ngx_http_proxy_abort_request;
+    u->finalize_request = ngx_http_proxy_finalize_request;
+
+    r->upstream = u;
+
+    rc = ngx_http_read_client_request_body(r, ngx_http_upstream_init);
+
+    if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
+        return rc;
+    }
+
+    return NGX_DONE;
+}
+```
+
+看上去都是些例行事务，不过重要的是那些回调函数。同时还要注意的是`ngx_http_read_client_request_body`，它又设置了一个回调函数，在Nginx完成从客户端读数据后会被调用。
+
+这些个回调函数都要做些什么工作呢？通常情况下，`reinit_request`, `abort_request`, 和 `finalize_request` 用来设置或重置一些内部状态，但这些都是几行代码的事情。真正做苦力的是`create_request` 和 `process_header`。
+
+#### 3.2.2. create_request 回调函数
+
+简单来说，假设我有一个upstream server，它读入一个字符打印出两个字符。那么函数应该如何来写呢？
+
+`create_request`需要申请一个buffer来存放“一个字符”的请求，为buffer申请一个链表，并且把链表挂到upstream结构体上。看起来就像这样：
+```
+static ngx_int_t
+ngx_http_character_server_create_request(ngx_http_request_t *r)
+{
+/* make a buffer and chain */
+    ngx_buf_t *b;
+    ngx_chain_t *cl;
+
+    b = ngx_create_temp_buf(r->pool, sizeof("a") - 1);
+    if (b == NULL)
+        return NGX_ERROR;
+
+    cl = ngx_alloc_chain_link(r->pool);
+    if (cl == NULL)
+        return NGX_ERROR;
+
+/* hook the buffer to the chain */
+    cl->buf = b;
+/* chain to the upstream */
+    r->upstream->request_bufs = cl;
+
+/* now write to the buffer */
+    b->pos = "a";
+    b->last = b->pos + sizeof("a") - 1;
+
+    return NGX_OK;
+}
+```
+
+不是很难，对吧？当然实际应用中你很可能还会用到请求里面的URI。`r->uri`作为一个 `ngx_str_t`类型也是有效的，GET的参数在`r->args`中，最后别忘了你还能访问请求头和cookie信息。
+
+#### 3.2.3. process_header 回调函数
+
+现在轮到`process_header`了，就像`create_request`添加链表指针到请求结构体上去一样，`process_header` _把响应指针移到客户端可以接收到的那部分上_。同时它还会从upstream读入头信息，并且相应的设置发往客户端的响应头。
+
+这里有个小例子，读进两个字符的响应。我们假设第一个字符代表“状态”字符。如果它是问号，我们将返回一个“404错误”并丢弃剩下的那个字符。
+如果它是空格，我们将以”200 OK“的响应把另一个字符返回给客户端。好吧，这不是什么多有用的协议，不过可以作为一个不错的例子。那么我们如何来实现这个`process_header` 函数呢？
+```
+static ngx_int_t
+ngx_http_character_server_process_header(ngx_http_request_t *r)
+{
+    ngx_http_upstream_t       *u;
+    u = r->upstream;
+
+    /* read the first character */
+    switch(u->buffer.pos[0]) {
+        case '?':
+            r->header_only; /* suppress this buffer from the client */
+            u->headers_in.status_n = 404;
+            break;
+        case ' ':
+            u->buffer.pos++; /* move the buffer to point to the next character */
+            u->headers_in.status_n = 200;
+            break;
+    }
+
+    return NGX_OK;
+```
+
+就是这样。操作头部，改变指针，搞定！注意`headers_in`实际上就是我们之前提到过的响应头[http/ngx_http_request.h](http://www.evanmiller.org/lxr/http/source/http/ngx_http_request.h#L158)，但是它位于来自upstream的头中。一个真正的代理模块会在头信息的处理上做很多文章，不光是错误处理，做什么完全取决于你的想法。
+
+但是...如果一个buffer没有能够装下全部的从upstream来的头信息，该怎么办呢？
+
+#### 3.2.4. 状态保持
+
+好了，还记得我说过`abort_request`, `reinit_request`和`finalize_request` 可以用来重置内部状态吗？
+这是因为许多upstream模块都有其内部状态。模块需要定义一个 _自定义的上下文结构(custom context struct)_ ，来标记目前为止从upstream读到了什么。这跟之前说的“模块上下文(Module Context)”不是一个概念。
+“模块上下文”是预定义类型，而自定义上下文结构可以包含任何你需要的数据和字段（这可是你自己定义的结构体）。这个结构体在`create_request`函数中被实例化，大概像这样：
+```
+    ngx_http_character_server_ctx_t   *p;   /* my custom context struct */
+
+    p = ngx_pcalloc(r->pool, sizeof(ngx_http_character_server_ctx_t));
+    if (p == NULL) {
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
+
+    ngx_http_set_ctx(r, p, ngx_http_character_server_module);
+```
+
+最后一行实际上将自定义上下文结构体注册到了特定的请求和模块名上，以便在稍后取用。当你需要这个结构体时（可能所有的回调函数中都需要它），只需要：
+```
+    ngx_http_proxy_ctx_t  *p;
+    p = ngx_http_get_module_ctx(r, ngx_http_proxy_module);
+```
+
+指针 `p` 可以得到当前的状态。设置、重置、增加、减少、往里填数据... 你可以随心所欲的操作它。当upstream服务器返回一块一块的响应时，读取这些响应的过程中使用持久状态机是个很牛逼的办法，它不用阻塞主事件循环。很好很强大！
+
+### 3.3. Handler的装载
+
+Handler的装载通过往模块启用了指令的回调函数中添加代码来完成。比如，我的circle gif 中`ngx_command_t`是这样的：
+```
+    { ngx_string("circle_gif"),
+      NGX_HTTP_LOC_CONF|NGX_CONF_NOARGS,
+      ngx_http_circle_gif,
+      0,
+      0,
+      NULL }
+```
+
+回调函数是里面的第三个元素，在这个例子中就是那个`ngx_http_circle_gif`。回调函数的参数是由指令结构体(`ngx_conf_t`, 包含用户配置的参数)，相应的`ngx_command_t`结构体以及一个指向模块自定义配置结构体的指针组成的。我的circle gif模块中，这些函数是这样子的：
+```
+static char *
+ngx_http_circle_gif(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+{
+    ngx_http_core_loc_conf_t  *clcf;
+
+    clcf = ngx_http_conf_get_module_loc_conf(cf, ngx_http_core_module);
+    clcf->handler = ngx_http_circle_gif_handler;
+
+    return NGX_CONF_OK;
+}
+```
+
+这里可以分为两步：首先，得到当前location的“core”结构体，再分配给它一个handler。很简单，不是吗？
+
+我已经把我知道的关于hanler模块的东西全交代清楚了，现在可以来说说输出过滤链上的filter模块了。
