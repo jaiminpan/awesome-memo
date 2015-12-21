@@ -1,4 +1,7 @@
+The Guide to Compile Nginx 
+==========================
 
+```
 # Configure nginx.
 #
 # This is based on the default package in Debian. Additional flags have
@@ -46,3 +49,4 @@
 
 make
 make install
+```
