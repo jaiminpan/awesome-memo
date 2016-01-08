@@ -17,6 +17,9 @@ Docker In Github
 * Gitlab, PostgreSQL, MySQL, MongoDB and etc  
   https://github.com/sameersbn/  
 
+Reference
+--------------
+https://github.com/widuu/chinese_docker/tree/master/userguide
 
 Books
 ------------
