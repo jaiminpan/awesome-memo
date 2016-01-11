@@ -16,6 +16,8 @@ Docker In Github
 ---------------
 * Gitlab, PostgreSQL, MySQL, MongoDB and etc  
   https://github.com/sameersbn/  
+  PS: Gitlab-8.3 in docker will get error 500 if git clone from svn and commits message title is 'git-svn-id......'  
+  (reword comments can fix it)   
 
 Gitlab Docker Sample:
 ---------------
