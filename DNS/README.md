@@ -46,7 +46,13 @@ dnspod-sr 是一个运行在 Linux 平台上的高性能的递归 DNS 服务器�
 具备高性能、高负载、易扩展的优势，非 BIND、powerdns 等软件可以比拟。
 但是dnspod-sr不具备授权功能。也只能用在内部。
 
+Code: https://github.com/DNSPod/dnspod-sr  
+Wiki: https://github.com/DNSPod/dnspod-sr/wiki  
+FAQ: https://github.com/DNSPod/dnspod-sr/wiki/FAQ  
+
 参考：  
+http://skypegnu1.blog.51cto.com/8991766/1635563  
+http://blog.dnspod.cn/2014/07/kaiyuan/  
 http://www.ttlsa.com/linux/dnspod-sr-little-dns/  
 http://blog.chinaunix.net/uid-29762534-id-4536608.html  
 
