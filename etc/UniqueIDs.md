@@ -34,7 +34,7 @@ DECLARE
     now_millis bigint;
     shard_id int := 5;
 BEGIN
-    SELECT nextval('insta5.table_id_seq') %% 1024 INTO seq_id;
+    SELECT nextval('insta5.table_id_seq') % 1024 INTO seq_id;
 
     SELECT FLOOR(EXTRACT(EPOCH FROM clock_timestamp()) * 1000) INTO now_millis;
     result := (now_millis - our_epoch) << 23;
