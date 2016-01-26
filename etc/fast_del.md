@@ -1,4 +1,4 @@
-# How to delete file(s) using quickly
+# How to delete file(s) using fast way
 
 * rm
 * find
@@ -38,24 +38,36 @@ for> done
 | 1  | `rm -rf ./to_del`    | fail |  |
 | 2 | `find ./to_del -type f -exec rm {} \`  | 43m19s | 49.86s user 1032.13s system 41% cpu 43:19.17 total |
 | 3 | `find ./to_del -type f -delete` | 9m13s | 0.43s user 11.21s system 2% cpu 9:13.38 total |
-| 4 | `rsync -a --delete blanktest/ to_del/` | 0m16s | 0.59s user 7.86s system 51% cpu 16.418 total |
+| 4 | `rsync -a --delete empty/ to_del/` | 0m16s | 0.59s user 7.86s system 51% cpu 16.418 total |
 | 5 | Python | 8m14s | 494.272291183 |
 | 6 | `perl -e 'for(<*>){((stat)[9]<(unlink))}' ` | 0m16s | 1.28s user 7.23s system 50% cpu 16.784 total |
 
 #### PS:
 4 rsync
-firstly, mkdir blanktest
+firstly, mkdir empty
 
 5 Python
 ```python
 import os
 import time
-stime=time.time()
-for pathname,dirnames,filenames in os.walk('/home/username/test'):
-     for filename in filenames:
-         file=os.path.join(pathname,filename)
+stime = time.time()
+for pathname,dirnames,files in os.walk('/home/username/test'):
+     for filename in files:
+         file = os.path.join(pathname,filename)
          os.remove(file)
  ftime=time.time()
  print ftime-stime
  ```
  
+```python
+def delfiles(strpath, suffix):
+     if os.path.exists(strpath):
+          for pathname, dir ,files in os.walk(strpath):
+               for filename in files:
+                    if filename.endswith(suffix):
+                         file = os.path.join(pathname, filename)
+                         os.remove(file)
+
+delfiles('to_del', 'py')
+```
+
