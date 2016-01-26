@@ -1,5 +1,6 @@
 # Out Of Memory (OOM)
 
+Reference: http://learning-kernel.readthedocs.org/en/latest/mem-management.html
 
 1. OOM启动是在分配内存时发生页面错误时触发的，没有剩余内存阙值可控制。  
 
