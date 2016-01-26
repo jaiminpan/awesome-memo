@@ -1,9 +1,9 @@
 # Logging
 
-Refference: 
-https://docs.python.org/2/howto/logging.html
-https://docs.python.org/2/howto/logging-cookbook.html
-https://docs.python.org/2/library/logging.html
+Refference:  
+https://docs.python.org/2/howto/logging.html  
+https://docs.python.org/2/howto/logging-cookbook.html  
+https://docs.python.org/2/library/logging.html  
 
 #### Example
 ```
