@@ -27,6 +27,9 @@ http://instagram-engineering.tumblr.com/post/10853187575/sharding-ids-at-instagr
 
 ### Here’s the PL/PGSQL that accomplishes all this (for an example schema insta5):
 ```plpgsql
+CREATE SCHEMA insta5;
+CREATE SEQUENCE table_id_seq;
+
 CREATE OR REPLACE FUNCTION insta5.next_id(OUT result bigint) AS $$
 DECLARE
     our_epoch bigint := 1314220021721;
