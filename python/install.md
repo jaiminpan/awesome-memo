@@ -3,29 +3,38 @@ Python
 
 Install in manaul
 ---------
-1. wget https://www.python.org/ftp/python/2.7.8/Python-2.7.8.tgz
+### Install Python
+  wget https://www.python.org/ftp/python/2.7.8/Python-2.7.8.tgz
 
   ```sh
-  tar xf Python-2.7.7.tgz
-  cd Python-2.7.7
-  ./configure --prefix=/usr/local
-  make && make install
-  ls /usr/local/bin/python2.7
+    tar xf Python-2.7.7.tgz
+    cd Python-2.7.7
+    ./configure --prefix=/usr/local
+    make && make install
+    ls /usr/local/bin/python2.7
   ```
-2. setuptools + pip
+### Install setuptools + pip
 
-  ```sh
-  # First get the setup script for Setuptools:
-  wget https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py
+  1. setuptools
+
+    ```
+      > wget https://bootstrap.pypa.io/ez_setup.py -O - | python
+    ```
+    For more to reference: https://pypi.python.org/pypi/setuptools
+  2. pip
   
-  # Then install it for Python 2.7 :
-  python2.7 ez_setup.py
-  
-  # Now install pip using the newly installed setuptools:
-  easy_install-2.7 pip
-  
-  # With pip installed you can now do things like this:
-  pip2.7 install [packagename]
-  pip2.7 install --upgrade [packagename]
-  pip2.7 uninstall [packagename]
-  ```
+    Download from https://pypi.python.org/pypi/pip#download  
+    ```
+      # tar -xzvf pip-x.x.x.tar.gz
+      # cd pip-x.x.x
+      # python setup.py install
+    ```
+    For more to reference: https://pypi.python.org/pypi/pip
+  3. After Installed
+
+    ```
+      # With pip installed you can now do things like this:
+      pip install [packagename]
+      pip install --upgrade [packagename]
+      pip uninstall [packagename]
+    ```
