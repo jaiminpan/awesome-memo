@@ -91,3 +91,9 @@ Please reference https://github.com/ganglia/gmond_python_modules
 
 Q: `$GANGLIA_INSTALL/lib64/ganglia/modpython.so` not exists, which is for python modules  
 A: make sure `python.h` is existed when make && make install for ganglia. Or `yum install python-devel.x86_64`  
+
+## Ganglia Web
+自定义界面，完成多指标在同一个界面   
+https://github.com/ganglia/ganglia-web/wiki#Defining_Custom_Graphs_Via_JSON  
+
+![image](https://github.com/ganglia/ganglia-web/wiki/network_report.png)
