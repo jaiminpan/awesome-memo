@@ -21,3 +21,8 @@
 详细参考：[JavaScript 的性能优化：加载和执行](http://www.ibm.com/developerworks/cn/web/1308_caiys_jsload/)
 
 ## Misc
+[学习JavaScript - 我的经验与建议（译）](http://blog.xiayf.cn/2013/03/25/learning-js/)
+
+## Books
+JavaScript DOM编程艺术 第2版  
+[JavaScript语言精粹_修订版](http://shop.oreilly.com/product/9780596517748.do)  
