@@ -56,3 +56,7 @@ Tornado 由前 Facebook 开发，用 Apache License 开源。
 * TCP层实现了TCP服务器，负责数据传输；
 * HTTP/HTTPS层基于HTTP协议实现了HTTP服务器和客户端；
 * 最上层为WEB框架，包含了处理器、模板、数据库连接、认证、本地化等等WEB框架需要具备的功能。
+
+
+## Book
+[Introduction to Tornado 中文翻译](https://github.com/alioth310/itt2zh)
