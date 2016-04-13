@@ -23,7 +23,7 @@ Python
 [中文教程](http://scrapy-chs.readthedocs.org/zh_CN/0.24/intro/tutorial.html)  
 
 ## 数据分析工具
-[python数据分析工具](https://github.com/jaiminpan/MYWIKI/edit/master/python/data_science.md)
+[python数据分析工具](https://github.com/jaiminpan/MYWIKI/blob/master/python/data_science.md)
 
 ## supervisor
 supervisor 是类似于Daemontools的监控工具，它基于python，能随时监控系统中某些进程的状态，并在“适当的时候给予适当的操作”。
