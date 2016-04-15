@@ -1,5 +1,6 @@
 # VPN on Linux
-隧道协议PPTP、L2TP、IPSec和SSLVPN
+存在隧道协议PPTP、L2TP、IPSec和SSLVPN
+[VPN 隧道协议PPTP、L2TP、IPSec和SSLVPN的区别](http://www.linuxidc.com/Linux/2014-07/104262.htm)
 
 # PPTP协议
 ## Client
