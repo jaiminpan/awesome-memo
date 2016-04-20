@@ -12,8 +12,8 @@ yum install webkitgtk
 ./spoon.sh
 
 #### Other Problem:
-Q. undefined symbol: soup_message_set_first_party
-A. yum install libsoup
+Q. undefined symbol: soup_message_set_first_party  
+A. yum install libsoup  
 
 
 ## Usage
