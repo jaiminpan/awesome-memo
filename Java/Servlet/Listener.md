@@ -1,5 +1,7 @@
 # Listener 简介
 
+[![ORIGIN](https://img.shields.io/badge/FROM-LINK-blue.svg)][1]
+
 监听器Listener就是在application,session,request三个对象创建、销毁或者往其中添加修改删除属性时自动执行代码的功能组件。
 
 Listener是Servlet的监听器，可以监听客户端的请求，服务端的操作等。
@@ -181,3 +183,6 @@ Spring使用Log4jConfigListener的好处：
     <listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class>
 </listener>
 ```
+
+
+[1]: http://tianweili.github.io/blog/2015/01/27/java-listener/
