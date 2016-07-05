@@ -126,7 +126,7 @@ ContextLoaderListener如何查找ApplicationContext.xml的配置位置以及配�
 <context-param>
     <param-name>contextConfigLocation</param-name>
     <param-value>classpath:spring/applicationContext-*.xml</param-value>
-    <!-- 采用的是通配符方式，查找WEB-INF/spring目录下xml文件。如有多个xml文件，以“,”分隔。 -->
+    <!-- 采用的是通配符方式，查找WEB-INF/spring目录下xml文件。如有多个xml文件，以空格、逗号、分号(任意一种)分隔。 -->
 </context-param>
 <listener>
     <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
