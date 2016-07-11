@@ -30,10 +30,11 @@ znode既可以保存数据（如同文件），也可以保存其他znode（如�
 ## 典型使用场景
 
 
-http://blog.csdn.net/liuxinghao/article/details/42747625
-http://www.jianshu.com/p/fa204ba67ced
-http://www.jianshu.com/p/7faf4783ee5b
-https://www.ibm.com/developerworks/cn/opensource/os-cn-zookeeper/
+# Misc
+http://blog.csdn.net/liuxinghao/article/details/42747625  
+http://www.jianshu.com/p/fa204ba67ced  
+http://www.jianshu.com/p/7faf4783ee5b  
+https://www.ibm.com/developerworks/cn/opensource/os-cn-zookeeper/  
 
-http://www.cnblogs.com/sunddenly/p/4033574.html
-http://www.cnblogs.com/sunddenly/p/4018459.html
+http://www.cnblogs.com/sunddenly/p/4033574.html  
+http://www.cnblogs.com/sunddenly/p/4018459.html  
