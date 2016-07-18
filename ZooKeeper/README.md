@@ -30,6 +30,16 @@ znode既可以保存数据（如同文件），也可以保存其他znode（如�
 ## 典型使用场景
 
 
+## 查看日志
+Sample
+```
+// Read snapshot file
+java -cp zookeeper-3.4.6.jar:lib/log4j-1.2.16.jar:lib/slf4j-log4j12-1.6.1.jar:lib/slf4j-api-1.6.1.jar org.apache.zookeeper.server.SnapshotFormatter version-2/snapshot.xxx
+
+// Read log file
+java -cp zookeeper-3.4.6.jar:lib/slf4j-api-1.6.1.jar org.apache.zookeeper.server.LogFormatter version-2/log.xxx
+```
+
 # Misc
 http://blog.csdn.net/liuxinghao/article/details/42747625  
 http://www.jianshu.com/p/fa204ba67ced  
