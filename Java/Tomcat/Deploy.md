@@ -32,9 +32,11 @@ webapps这个默认的应用目录也是可以改变。打开Tomcat的`conf/serv
 #### 配置目录`conf/Catalina/localhost`, 加入一个Context文件
 以上两种方法，Web应用被服务器加载后都会在Tomcat的conf\catalina\localhost目录下生成一个XML文件，其内容如下：
 ```xml
+<?xml version="1.0" encoding="UTF-8"?>
 <Context path="/admin" docBase="/data/webapps/admin" reloadable="false"></Context>
 # OR
 <Context path="/admin" docBase="${catalina.home}/server/webapps/admin" debug="0" privileged="true"></Context>
+</Context>
 ```
 可以看出，文件中描述一个应用程序的Context信息，其内容和server.xml中的Context信息格式是一致的，文件名便是虚拟目录名。
 您可以直接建立这样的一个xml文件，放在Tomcat的conf\catalina\localhost目录下。
