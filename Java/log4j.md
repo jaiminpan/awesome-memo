@@ -212,4 +212,40 @@ G：all 最低等级，用于打开所有日志记录。
 ```
 
 
+## 动态调整例子
+```java
+//包
+Level level = Level.toLevel(Level.DEBUG);  
+Logger logger = LogManager.getLogger(“package”);  
+logger.setLevel(level);  
+//全局
+Level level = Level.toLevel(Level.DEBUG);  
+LogManager.getRootLogger().setLevel(level);  
+```
+
+```java
+@Path("/conf")  
+@Component("configurationResource")  
+public class ConfigurationResource {  
+    @GET  
+    @Produces(MediaType.APPLICATION_XML)  
+    @Path("/log/package/{package}/{level}")  
+    public Response index(@PathParam("package") String p, @PathParam("level") String l) {  
+        Level level = Level.toLevel(l);  
+        Logger logger = LogManager.getLogger(p);  
+        logger.setLevel(level);  
+        return Response.ok().build();  
+    }  
+  
+    @GET  
+    @Produces(MediaType.APPLICATION_XML)  
+    @Path("/log/root/{level}")  
+    public Response index(@PathParam("level") String l) {  
+        Level level = Level.toLevel(l);  
+        LogManager.getRootLogger().setLevel(level);  
+        return Response.ok().build();  
+    }  
+}  
+```
+
 [1]: http://www.codeceo.com/article/log4j-usage.html
