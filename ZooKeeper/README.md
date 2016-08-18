@@ -39,6 +39,15 @@ java -cp zookeeper-3.4.6.jar:lib/log4j-1.2.16.jar:lib/slf4j-log4j12-1.6.1.jar:li
 // Read log file
 java -cp zookeeper-3.4.6.jar:lib/slf4j-api-1.6.1.jar org.apache.zookeeper.server.LogFormatter version-2/log.xxx
 ```
+## 配置参数
+
+#### maxClientCnxns
+ZooKeeper关于maxClientCnxns参数的官方解释：
+> 单个客户端与单台服务器之间的连接数的限制，是ip级别的，默认是60，如果设置为0，那么表明不作任何限制。请注意这个限制的使用范围，仅仅是单台客户端机器与单台ZK服务器之间的连接数限制，不是针对指定客户端IP，也不是ZK集群的连接数限制，也不是单台ZK对所有客户端的连接数限制。
+
+> Limits the number of concurrent connections (at the socket level) that a single client, identified by IP address, may make to a single member of the ZooKeeper ensemble. This is used to prevent certain classes of DoS attacks, including file descriptor exhaustion. The default is 60. Setting this to 0 entirely removes the limit on concurrent connections.
+
+限制的是单个ip上最多能连接zk的个数，而不是总连接个数。
 
 # Misc
 http://blog.csdn.net/liuxinghao/article/details/42747625  
