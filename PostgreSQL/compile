@@ -1,0 +1,17 @@
+./configure \
+--prefix=/usr/local/pgsql \
+--with-pgport=1999 \
+--with-perl \
+--with-tcl \
+--with-python \
+--with-openssl \
+--with-pam \
+--without-ldap \
+--with-libxml \
+--with-libxslt \
+--enable-thread-safety \
+--with-wal-blocksize=16 \
+--with-blocksize=16 \
+--enable-dtrace \
+--enable-debug \
+--enable-cassert
