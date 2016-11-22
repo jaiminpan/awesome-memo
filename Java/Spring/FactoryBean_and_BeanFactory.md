@@ -90,3 +90,9 @@ public class CarFactoryBean implements FactoryBean<Car> {
 当调用getBean("car") 时，Spring 通过反射机制发现`CarFactoryBean`实现了`FactoryBean`的接口，这时 Spring 容器就调用接口方法 `CarFactoryBean#getObject()` 方法返回。
 
 如果希望获取 CarFactoryBean 的实例，则需要在使用 getBean(beanName) 方法时在 beanName 前显示的加上 "&" 前缀：如 getBean("&car");
+
+
+源码位置：getObjectForBeanInstance in [AbstractBeanFactory.java][code_AbstractBeanFactory]
+
+
+[code_AbstractBeanFactory]: https://github.com/spring-projects/spring-framework/blob/master/spring-beans/src/main/java/org/springframework/beans/factory/support/AbstractBeanFactory.java
