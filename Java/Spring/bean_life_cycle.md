@@ -92,6 +92,7 @@ public class Example implements ApplicationContextAware, InitializingBean {
 
 
 ## 整个例子
+
 ```java
 @Component  
 public class DemoBean implements BeanFactoryAware, BeanNameAware,  
@@ -141,6 +142,8 @@ DemoBean: after properties set!
 DemoBeanPostProcessor: post process after initialization, [beanName=demoBean, bean=com.shansun.multidemo.spring.lifecycle.DemoBean@1deeb40]
 
 ```
+相应的源码位置: initializeBean in [AbstractAutowireCapableBeanFactory.java][code_AbstractAutowireCapableBeanFactory]
+
 
 
 [code_AbstractAutowireCapableBeanFactory]: https://github.com/spring-projects/spring-framework/blob/master/spring-beans/src/main/java/org/springframework/beans/factory/support/AbstractAutowireCapableBeanFactory.java
