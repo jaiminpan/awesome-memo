@@ -55,8 +55,8 @@ BeanPostProcessor接口有两个方法
 如果希望在bean的属性值被设置之后还想做点工作，则可以考虑让这个bean实现InitializingBean接口。
 InitializingBean接口中，唯一的afterPropertiesSet()接口可以实现所需要的工作。
 
-注意，如果同时在配置文件指定init-method，调用顺序如下
-
+注意，如果同时在配置文件指定init-method，调用顺序如下，
+(另外init-method/destroy-method用的是反射方式，调用速度比InitializingBean/DisposableBean略慢，)
 
 调用顺序
 * postProcessBeforeInitialization()
@@ -91,8 +91,9 @@ public class Example implements ApplicationContextAware, InitializingBean {
 
 
 
-## 整个例子
+## 总结
 
+例子
 ```java
 @Component  
 public class DemoBean implements BeanFactoryAware, BeanNameAware,  
