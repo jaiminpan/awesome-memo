@@ -26,30 +26,67 @@ FactoryBean 是一直特殊的bean，它实际上也是一个工厂，我们在�
 spring 内部实现中应该是在通过BeanFacotry 的getBean(String beanName) 来得到Bean时，如果这个Bean是一个FactoryBean,则把它生成的Bean返回，
 否者直接返回Bean.
 
+
 ## 例子
+```java
+package com.test.factorybean;  
+public class Car {
+	private int maxSpeed;
+	private String brand;
+	private double price;
+	public int getMaxSpeed() {
+		return maxSpeed;
+	}  
+	public void setMaxSpeed(int maxSpeed) {
+		this.maxSpeed = maxSpeed;  
+	}  
+	public String getBrand() {
+		return brand ;  
+	}  
+	public void setBrand(String brand) {
+		this.brand = brand;
+	}  
+	public double getPrice() {
+		return price;
+	}
+	public void setPrice(double price) {
+		this.price = price;  
+	}
+}
 ```
-package  com.baobaotao.factorybean;  
-    public   class  Car  {  
-        private   int maxSpeed ;  
-        private  String brand ;  
-        private   double price ;  
-        public   int  getMaxSpeed ()   {  
-            return   this . maxSpeed ;  
-        }  
-        public   void  setMaxSpeed ( int  maxSpeed )   {  
-            this . maxSpeed  = maxSpeed;  
-        }  
-        public  String getBrand ()   {  
-            return   this . brand ;  
-        }  
-        public   void  setBrand ( String brand )   {  
-            this . brand  = brand;  
-        }  
-        public   double  getPrice ()   {  
-            return   this . price ;  
-        }  
-        public   void  setPrice ( double  price )   {  
-            this . price  = price;  
-       }  
-}   
+```java
+package com.test.factorybean;
+import org.springframework.beans.factory.FactoryBean;
+public class CarFactoryBean implements FactoryBean<Car> {
+	private tring carInfo;
+	public Car getObject() throws Exception {
+		Car car = new Car();
+		String[] infos = carInfo.split(",");
+		car.setBrand(infos[0]);
+		car.setMaxSpeed(Integer.valueOf(infos[1]));
+		car.setPrice(Double.valueOf(infos[2]));
+		return car;
+	}
+	public Class<Car> getObjectType() {
+		return Car.class;
+	}
+	public boolean isSingleton() {
+		return false;
+	}
+
+	// 接受逗号分割符设置属性信息  
+	public void setCarInfo(String carInfo) {
+		carInfo = carInfo;
+	}
+	public String getCarInfo() {
+		return carInfo;
+	}
+}
 ```
+有了这个CarFactoryBean后，就可以在配置文件中使用下面这种自定义的配置方式配置Car Bean了：
+```xml
+<bean id="car" class="com.baobaotao.factorybean.CarFactoryBean" P:carInfo="法拉利,400,2000000"/>
+```
+当调用getBean("car") 时，Spring 通过反射机制发现`CarFactoryBean`实现了`FactoryBean`的接口，这时 Spring 容器就调用接口方法 `CarFactoryBean#getObject()` 方法返回。
+
+如果希望获取 CarFactoryBean 的实例，则需要在使用 getBean(beanName) 方法时在 beanName 前显示的加上 "&" 前缀：如 getBean("&car");
