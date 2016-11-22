@@ -1,6 +1,9 @@
 # ApplicationContext
 
+[源码位置][code]
 
+
+## 图示
 ClassPathXmlAppliationContext的类继承层次图  
 <img src="https://github.com/jaiminpan/misc-image/blob/master/memo/ClassPathXmlAppliationContext.png" width="500">
 
@@ -11,7 +14,7 @@ FileSystemXmlApplicationContext的类继承层次图
 #### 结构图
 <img src="https://github.com/jaiminpan/misc-image/blob/master/memo/Class%20Diagram.png" width="600">
 
-#### 简单分析
+## 简单分析
 * __DefaultResourceLoader__: 
   * 资源定位类，可以通过一个String类型的path获取一个Resource，从而指向一个具体的文件。
 此类中最重要的方法是Resource getResource(String location)，该方法间接调用getResourceByPath来获取Resource.
@@ -39,3 +42,6 @@ createBeanFactory()在refreshBeanFactory被调用，是真正的创建工厂的�
 * __FileSystemXmlApplicationContext__: 
   *  FileSystemXmlApplicationContext(String configLocations[], boolean refresh, ApplicationContext parent)
 getResourceByPath方法是对父类DefaultResourceLoader中getResourceByPath的覆盖。
+
+
+[code]: https://github.com/spring-projects/spring-framework/blob/master/spring-context/src/main/java/org/springframework/context/support/AbstractApplicationContext.java
