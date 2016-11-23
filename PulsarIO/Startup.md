@@ -30,8 +30,7 @@ try {
 }
 ```
 
-使用CliOptions解析参数(ref:parseOptions函数)
-参数意义：
+再使用CliOptions解析参数(ref:parseOptions函数)
 ```java
     options.addOption("b", "beans", true, "Beans to start during initialization");
     options.addOption("c", "config", true, "Configuration URL or file path");
@@ -43,5 +42,17 @@ try {
     options.addOption("wqz", "workqueuesz", true, "work queue size");
     options.addOption("wt", "workerthreads", true, "worker threads");
 ```
+
+## RootConfiguration
+RootConfiguration是一个全局的spring ApplicationContext，使用singleton模式可以让任意的class获取相关bean。
+此类获取环境变量`$JETSTREAM_HOME/JetstreamConf`，定位相关资源目录, 通过调用 getDefaultContexts()获取所有资源，
+然后使用父类Configuration的构造函数初始化。
+Configuration真正实现相关的函数接口，如
+* getConfigResources()
+* getResourceByPath()
+* loadBeanDefinitions()
+
+在父类AbstractUpdateableApplicationContext中定义 UpdateableListableBeanFactory，所以可以动态更新相关的bean信息。
+
 
 [C_JetstreamApplication]: https://github.com/pulsarIO/jetstream/blob/master/jetstreamframework/src/main/java/com/ebay/jetstream/application/JetstreamApplication.java
