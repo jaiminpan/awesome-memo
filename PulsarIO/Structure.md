@@ -23,6 +23,7 @@
 * 事件(event)流的处理框架(核心抽象类 AbstractEventSource、AbstractEventProcessor)
 * AbstractEventSource子类(补充统计相关信息，AbstractInboundChannel、AbstractOutboundChannel)
 * 数据流画像 dataflow
+* 通用事件生成器 GenericEventGenerator
 * 默认spring xml配置
 
 ## jetstream-messaging
