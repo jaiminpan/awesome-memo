@@ -26,8 +26,9 @@
 * 默认spring xml配置
 
 ## jetstream-messaging
-* 连接 Messaging 框架和数据流处理框架 (InboundMessagingChannel、OutboundMessagingChannel)
-* 连接 REST(http)接口和框架和数据流处理框架 (InboundRESTChannel、OutboundRESTChannel)
+* 连接流处理框架、 Messaging (InboundMessagingChannel、OutboundMessagingChannel)
+* 连接流处理框架、 REST(http) (InboundRESTChannel、OutboundRESTChannel)
+* 连接流处理框架、 kafka (InboundKafkaChannel、OutboundKafkaChannel)
 
 ## jetstreamspring
 主要是Configure用到，和Spring的 ListableBeanFactory、 ApplicationEvent、BeanChangeAware 相关的代码。
