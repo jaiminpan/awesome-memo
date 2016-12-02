@@ -30,7 +30,7 @@ Monitorable, MonitorableStatCollector两个接口主要和监控统计相关
 **主要是对process本身的控制和信息统计**
 
 ## AbstractQueuedEventProcessor
-真正实现sendEvent的抽象类
+真正实现 sendEvent 的抽象类，在sendEvent中调用queueEvent方法， 默认实现queueEvent方法为：把事件放入RequestQueueProcessor(一个util类，此类实现了一个ringbuffer的工作线程池)线程池并配置真正处理的EventProcessRequest工作类，在工作线程处理
 
-
+子类可以重载 queueEvent方法，并必须实现 getProcessEventRequest，来决定真正的处理工作方式。在EventProcessRequest 中留有接口processEvent方法来处理，如在EsperProcessor的实现中，新增了ProcessEventRequest来让epl处理真正的工作。
 
