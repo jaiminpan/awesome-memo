@@ -17,6 +17,9 @@ Lex & Flex 文件一般以`.l`后缀结尾。
 #include <stdio.h>
 %}
 
+%option noyywrap
+%option main
+
 digit			[0-9]
 %%
 stop    printf("Stop command received\n");
