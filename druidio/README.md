@@ -37,7 +37,8 @@ generate-example-metrics jconsole.sh init
 ```
 `node.sh` 是核心的启动脚本，其他一些如broker.sh都是基于之上的分装。
 
-在使用这些命令前，需要配置环境变量，考虑创建环境脚本env.sh，source以后就可以直接调用broker.sh。
+在使用这些命令前，需要配置环境变量，考虑创建环境脚本[env.sh][env]  
+source以后就可以直接调用broker.sh。
 ```
 cat env.sh
 # 配置文件目录
@@ -130,82 +131,9 @@ flattenSpec 中的 fields的 type： "path" 表示嵌套的json子内容
 ## Misc
 
 #### 启动文件 druid.sh
-由于有时候需要全部重起节点，创建了快速启动的脚本
-```
-#!/bin/bash
+由于有时候需要全部重起节点，创建了快速启动的脚本 [druid.sh][druid_script]
 
-prog=$0
-RETVAL=0
 
-BIN_PATH=/opt/appsoft/druid-0.9.2/bin
-
-start() {
-		echo -n $"Starting $prog: "
-
-		${BIN_PATH}/historical.sh start
-		${BIN_PATH}/coordinator.sh start
-		${BIN_PATH}/broker.sh start
-		${BIN_PATH}/middleManager.sh start
-		${BIN_PATH}/overlord.sh start
-
-		return $RETVAL
-}
-
-stop() {
-		echo $"Stoping $prog: "
-
-		${BIN_PATH}/overlord.sh stop
-		${BIN_PATH}/middleManager.sh stop
-		${BIN_PATH}/broker.sh stop
-		${BIN_PATH}/coordinator.sh stop
-		${BIN_PATH}/historical.sh stop
-}
-
-status() {
-		echo $"Status $prog: "
-
-		echo -n "historical: "
-		${BIN_PATH}/historical.sh status
-
-		echo -n "coordinator: "
-		${BIN_PATH}/coordinator.sh status
-
-		echo -n "broker: "
-		${BIN_PATH}/broker.sh status
-
-		echo -n "middleManager: "
-		${BIN_PATH}/middleManager.sh status
-
-		echo -n "overlord: "
-		${BIN_PATH}/overlord.sh status
-
-		return $RETVAL
-}
-
-restart() {
-		stop
-		start
-}
-
-case "$1" in
-		start)
-				start
-				;;
-		stop)
-				stop
-				;;
-		status)
-				status
-				;;
-		restart)
-				restart
-				;;
-		*)
-				echo $"Usage: $prog {start|stop|restart|status}"
-				RETVAL=2
-esac
-
-exit $RETVAL
-```
-
+[env]: https://github.com/jaiminpan/fast-memo/blob/master/druidio/script/env.sh
+[druid_script]: https://github.com/jaiminpan/fast-memo/blob/master/druidio/script/druid.sh
 
