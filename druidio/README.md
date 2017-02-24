@@ -133,6 +133,10 @@ flattenSpec 中的 fields的 type： "path" 表示嵌套的json子内容
 #### 启动文件 druid.sh
 由于有时候需要全部重起节点，创建了快速启动的脚本 [druid.sh][druid_script]
 
+#### Reference
+
+http://www.infocool.net/kb/OtherDB/201610/206153.html
+
 
 [env]: https://github.com/jaiminpan/fast-memo/blob/master/druidio/script/env.sh
 [druid_script]: https://github.com/jaiminpan/fast-memo/blob/master/druidio/script/druid.sh
