@@ -38,7 +38,9 @@ yum install bzip2-devel
       # cd pip-x.x.x
       # python setup.py install
     ```
-    For more to reference: https://pypi.python.org/pypi/pip
+    For more to reference:   
+    https://pypi.python.org/pypi/pip  
+    https://pip.pypa.io/en/latest/installing/#id7  
   3. After Installed
 
     ```
@@ -70,3 +72,4 @@ imageop | N/A | Manipulate raw image data。已经弃用。
 readline | readline-devel | GNU readline interface
 sunaudiodev | N/A | Access to Sun audio hardware。这个是针对Sun平台的，CentOS下可以忽略
 zlib | Zlib | Compression compatible with gzip
+
