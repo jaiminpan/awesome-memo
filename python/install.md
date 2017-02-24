@@ -18,7 +18,7 @@ yum install bzip2-devel
   ```sh
     tar xf Python-2.7.7.tgz
     cd Python-2.7.7
-    ./configure --prefix=/usr/local --enable-shared
+    ./configure --prefix=/usr/local/python27 --enable-shared
     make && make install
     ls /usr/local/bin/python2.7
   ```
