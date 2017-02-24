@@ -9,7 +9,7 @@ Install in manaul
   ```sh
     tar xf Python-2.7.7.tgz
     cd Python-2.7.7
-    ./configure --prefix=/usr/local
+    ./configure --prefix=/usr/local --enable-optimizations --enable-shared
     make && make install
     ls /usr/local/bin/python2.7
   ```
