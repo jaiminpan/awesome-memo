@@ -46,8 +46,8 @@ sudo yum install -y mysql
 sudo yum install -y mysql-devel
 
 CREATE USER airflow;
-CREATE DATABASE airflow;
-CREATE DATABASE celery_result_airflow;
+CREATE DATABASE airflow CHARACTER SET utf8 COLLATE utf8_general_ci;;
+CREATE DATABASE celery_result_airflow CHARACTER SET utf8 COLLATE utf8_general_ci;;
 
 GRANT all privileges on airflow.* TO 'airflow'@'%' IDENTIFIED BY 'airflow';
 GRANT all privileges on celery_result_airflow.* TO 'airflow'@'%' IDENTIFIED BY 'airflow';
