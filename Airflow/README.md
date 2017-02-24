@@ -35,7 +35,7 @@ airflow webserver -p 8080
 airflow initdb
 airflow webserver -p 8080 # 启动web服务器
 airflow scheduler	# 启动任务
-airflow work		# 启动 worker
+airflow worker		# 启动 worker
 airflow test ct1 print_date 2016-05-14 # 或者测试文章末尾的DAG
 ```
 
