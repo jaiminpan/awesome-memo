@@ -66,7 +66,11 @@ mkdir -p $LOG_DIR/druid/segment-cache;
 mkdir -p $LOG_DIR/druid/task;
 mkdir -p $LOG_DIR/druid/hadoop-tmp;
 mkdir -p $LOG_DIR/druid/pids;
+
+# OR
+mkdir -p $LOG_DIR/{tmp,druid/{indexing-logs,segments,segment-cache,task,hadoop-tmp,pids}}
 ```
+
 
 #### 配置文件修改
 * 主要是 Zookeeper 地址，Metadata的db位置，还有deep storage和 indexing log的位置  
