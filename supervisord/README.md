@@ -12,8 +12,8 @@ echo_supervisord_conf > /etc/supervisor/supervisord.conf
 #### 配置管理进程
 
 进程管理配置参数，不建议全都写在supervisord.conf文件中，应该每个进程写一个配置文件放在include指定的目录下包含进supervisord.conf文件中。 
-1> 创建/etc/supervisor/config.d目录，用于存放进程管理的配置文件 
-2> 修改/etc/supervisor/supervisord.conf中的include参数，将/etc/supervisor/conf.d目录添加到include中
+* 创建/etc/supervisor/config.d目录，用于存放进程管理的配置文件 
+* 修改/etc/supervisor/supervisord.conf中的include参数，将/etc/supervisor/conf.d目录添加到include中
 
 ```
 [include]
