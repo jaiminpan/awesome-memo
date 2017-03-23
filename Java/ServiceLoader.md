@@ -131,3 +131,61 @@ for (TeslaModule module : allServices) {
 
 我们通过一个简单模块系统的实现讲解了ServiceLoader的应用场景。当然ServiceLoader不只局限于模块的加载，因为ServiceLoader本身是一个简单可靠的工具，JDK中很多SPI（Service Provider Interface）的实现都是通过ServiceLoader方式加载的。所以说在Java中需要用到接口扩展的时候，第一选择就是ServiceLoader了，因为它是JDK自带的，不需要引入第三方的库。
 
+
+## ExtensionLoaderUtils
+```
+package team.priv.oula.client.util;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
+import java.util.concurrent.ConcurrentHashMap;
+
+public final class ExtensionLoader {
+
+	private static Map<Class<?>, Object> extensionMap = new ConcurrentHashMap<Class<?>, Object>();
+
+	private static Map<Class<?>, List<?>> extensionListMap = new ConcurrentHashMap<Class<?>, List<?>>();
+
+	public static <T> T getExtension(Class<T> clazz) {
+		T extension = (T) extensionMap.get(clazz);
+		if (extension == null) {
+			extension = newExtension(clazz);
+			if (extension != null) {
+				extensionMap.put(clazz, extension);
+			}
+		}
+		return extension;
+	}
+
+	public static <T> List<T> getExtensionList(Class<T> clazz) {
+		List<T> extensions = (List<T>) extensionListMap.get(clazz);
+		if (extensions == null) {
+			extensions = newExtensionList(clazz);
+			if (!extensions.isEmpty()) {
+				extensionListMap.put(clazz, extensions);
+			}
+		}
+		return extensions;
+	}
+
+	public static <T> T newExtension(Class<T> clazz) {
+		ServiceLoader<T> serviceLoader = ServiceLoader.load(clazz);
+		for (T service : serviceLoader) {
+			return service;
+		}
+		return null;
+	}
+
+	public static <T> List<T> newExtensionList(Class<T> clazz) {
+		ServiceLoader<T> serviceLoader = ServiceLoader.load(clazz);
+		List<T> extensions = new ArrayList<T>();
+		for (T service : serviceLoader) {
+			extensions.add(service);
+		}
+		return extensions;
+	}
+}
+
+```
