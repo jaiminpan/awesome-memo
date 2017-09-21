@@ -290,5 +290,126 @@ docker-compose start gitlab
 ```
 
 
+#### 5.备份和恢复
+1.备份（机器O）
+```sh
+#登录机器O，执行备份，会生成类似1497291058_gitlab_backup.tar的备份文件
+cd /var/opt/gitlab/backups/
+gitlab-rake gitlab:backup:create RAILS_ENV=production
+#发送到docker gitlab服务器的备份目录
+scp 1497291058_gitlab_backup.tar root@172.16.16.147:/home/data/gitlab/data/backups/
+```
+2.恢复（机器A）
+```sh
+#登录gitlab容器
+docker exec -ti data_gitlab_1 bash
+#执行恢复
+sudo -u git -H bundle exec rake gitlab:backup:restore RAILS_ENV=production
+```
+恢复输入确认
+```sh
+#一共有两个部分需要确认
+1.恢复git数据
+Before restoring the database we recommend removing all existing
+tables to avoid future upgrade problems. Be aware that if you have
+custom tables in the GitLab database these tables and all data will be
+removed.
+Do you want to continue (yes/no)? 输入yes
 
+2.恢复authorized_keys文件
+This will rebuild an authorized_keys file.
+You will lose any data stored in authorized_keys file.
+Do you want to continue (yes/no)? 输入no
+```
+3.清除缓存
+```sh
+#登录gitlab容器
+docker exec -ti data_gitlab_1 bash
+#清除缓存
+sudo -u git -H bundle exec rake cache:clear RAILS_ENV=production
+```
+
+
+#### 6.升级gitlab
+1.关闭和删除8.10.5版本的gitlab docker容器(机器A)
+```sh
+docker-compose stop gitlab
+docker-compose rm gitlab
+```
+2.启动9.2.2版本gitlab docker容器(机器A)
+
+9.2.2的docker-compose配置文件：
+```sh
+gitlab:
+  restart: always
+  image: sameersbn/gitlab:9.2.2
+  ports:
+    - "10080:80"
+    - "10022:22"
+  environment:
+    #postgresql
+    - DB_ADAPTER=postgresql
+    - DB_HOST=172.16.16.148
+    - DB_PORT=5432
+    - DB_USER=gitlab
+    - DB_PASS=hamgua!@#gitlab
+    - DB_NAME=gitlabhq_production
+    #redis
+    - REDIS_HOST=172.16.16.148
+    - REDIS_PORT=6379
+    #global config
+    - DEBUG=false
+    - TZ=Asia/Beijing
+    - GITLAB_TIMEZONE=Beijing
+    - GITLAB_HOST=git.hamgua.com
+    #ssl port
+    - GITLAB_PORT=443
+    #ssh port
+    - GITLAB_SSH_PORT=22
+    - GITLAB_HTTPS=true
+    - GITLAB_NOTIFY_ON_BROKEN_BUILDS=true
+    - GITLAB_NOTIFY_PUSHER=false
+    - GITLAB_PAGES_ENABLED=true
+    - GITLAB_PAGES_DOMAIN=git.hamgua.com
+    - GITLAB_RELATIVE_URL_ROOT=
+    - GITLAB_SECRETS_DB_KEY_BASE=mjztzlfksTvRz5wNXjVDstTJZklGKDWsHX6Q9s55ZVc9v7TdGvDs3DHzFLxsKWsT
+    - GITLAB_SECRETS_SECRET_KEY_BASE=RWNLdwXfsGHdGGjwSw678sWxztJ3sPJbfVm2BRrHq5Ql9XCZVXVLTHN7vpSdWmKF2DJ4qV2s5NJgZwcxPjZw5wJ9PwvdhjsQ99dWjmLDXvwBsWV3K227573vVQCmwZ5R
+    - GITLAB_SECRETS_OTP_KEY_BASE=LrC872vHQ5bnjB6m7xBHPF99H9NPvqcFJlbf47TVZN835FnGG5kJvFtRwQQVRmBfcW96TJtJF5sxWKBKmm6QWf2RNddScLXMnwmmtGcDptRclZ97GLx8SxVSjdgm88WG    
+    - GITLAB_ROOT_EMAIL=hamgua@hamgua.com
+    - GITLAB_EMAIL=hamgua@hamgua.com
+    - GITLAB_EMAIL_REPLY_TO=hamgua@hamgua.com
+    - GITLAB_INCOMING_EMAIL_ADDRESS=hamgua@hamgua.com
+    #backup
+    - GITLAB_BACKUP_SCHEDULE=daily
+    - GITLAB_BACKUP_TIME=01:00
+    #smtp
+    - SMTP_ENABLED=true
+    - SMTP_DOMAIN=hamgua.com
+    - SMTP_HOST=smtp.exmail.qq.com
+    - SMTP_PORT=587
+    - SMTP_USER=hamgua@hamgua.com
+    - SMTP_PASS=hamgua
+    - SMTP_STARTTLS=true
+    - SMTP_AUTHENTICATION=plain
+    - IMAP_ENABLED=false
+  volumes:
+    - /home/data/gitlab/data:/home/git/data:Z
+```
+初始化(机器A)
+```sh
+cd /home/data
+docker-compose create gitlab
+```
+启动(机器A)
+```sh
+cd /home/data
+docker-compose start gitlab
+```
+清除缓存
+```sh
+#登录gitlab容器
+docker exec -ti data_gitlab_1 bash
+#清除缓存
+sudo -u git -H bundle exec rake cache:clear RAILS_ENV=production
+```
 
