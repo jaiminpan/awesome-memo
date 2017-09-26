@@ -35,6 +35,11 @@ DBUser=zabbix
 DBPort=5432
 DBHost=localhost
 ```
+#### Install Web
+Copy php dir from source code and config nginx  
+** Upgrade php to 5.6 **  
+Reference [php5.6 Install Guide](https://github.com/jaiminpan/fast-memo/blob/master/php/install.md)
+
 
 ## Source Code Install
 Reference [Official Webpage](https://www.zabbix.com/documentation/3.4/manual/installation/install)
@@ -61,6 +66,8 @@ useradd zabbix
 ```
 
 
+## Other Installation Guide
+https://yq.aliyun.com/articles/9091
 
 
 
