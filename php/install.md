@@ -46,6 +46,11 @@ yum remove php.x86_64 php-cli.x86_64 php-common.x86_64 \
 # php --version
 ```
 
+```
+# for postgresql connection
+yum install --enablerepo=remi --enablerepo=remi-php56 php-pgsql
+```
+
 #### Install PHP-fpm
 ```
 yum install --enablerepo=remi --enablerepo=remi-php56 php-fpm  
