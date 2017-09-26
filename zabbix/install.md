@@ -69,7 +69,7 @@ useradd zabbix
 
 ## Other Installation Guide
 https://yq.aliyun.com/articles/9091
-
+https://www.phpsong.com/2015.html
 
 
 
