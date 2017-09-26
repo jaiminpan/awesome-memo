@@ -35,3 +35,33 @@ DBUser=zabbix
 DBPort=5432
 DBHost=localhost
 ```
+
+## Source Code Install
+Reference [Official Webpage](https://www.zabbix.com/documentation/3.4/manual/installation/install)
+### Download Source Code
+Go to the [Zabbix Download Page](https://www.zabbix.com/download)
+```
+tar xvfz zabbix-3.4.0.tar.gz
+```
+### Create user account
+```
+useradd zabbix
+```
+
+### Compile & install
+```
+./configure --prefix=/usr/local/zabbix/3.4 \
+  --enable-server \
+  --enable-agent \
+  --with-postgresql \
+  --enable-ipv6 \
+  --with-net-snmp \
+  --with-libcurl \
+  --with-libxml2
+```
+
+
+
+
+
+
