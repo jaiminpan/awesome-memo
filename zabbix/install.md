@@ -36,7 +36,8 @@ DBPort=5432
 DBHost=localhost
 ```
 #### Install Web
-Copy php dir from source code and config nginx  
+Zabbix Web is written by php.
+To install web just by copy `zabbix/frontends/php` directory from source code and config nginx  
 ** Upgrade php to 5.6 **  
 Reference [php5.6 Install Guide](https://github.com/jaiminpan/fast-memo/blob/master/php/install.md)
 
