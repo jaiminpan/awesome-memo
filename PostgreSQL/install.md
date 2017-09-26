@@ -6,7 +6,8 @@
 #### A
 ```
 yum install https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-6.8-x86_64/pgdg-centos96-9.6-3.noarch.rpm
-yum install xxxx
+
+yum install postgresql95-server postgresql95-contrib
 ```
 
 
