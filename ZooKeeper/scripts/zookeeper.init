@@ -1,0 +1,38 @@
+#!/bin/sh
+#
+# chkconfig: 2345 20 90
+# description: zookeeper
+# processname: zookeeper
+
+ZOOKEEPER_HOME=/data/appsoft/zookeeper
+ZK_USER=zookeeper
+
+SU=su
+
+start()
+{
+	$SU -l $ZK_USER -c "$ZOOKEEPER_HOME/bin/zkServer.sh start"
+}
+
+stop()
+{
+	$SU -l $ZK_USER -c "$ZOOKEEPER_HOME/bin/zkServer.sh stop"
+}
+
+status()
+{
+	$SU -l $ZK_USER -c "$ZOOKEEPER_HOME/bin/zkServer.sh status"
+}
+
+restart()
+{
+	$SU -l $ZK_USER -c "$ZOOKEEPER_HOME/bin/zkServer.sh restart"
+}
+
+case $1 in
+	 start|stop|status|restart)
+		$1
+		;;
+	*)
+		echo "require start|stop|status|restart" ;;
+esac
