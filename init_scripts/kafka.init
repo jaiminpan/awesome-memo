@@ -10,11 +10,14 @@
 
 
 KAFKA_HOME=/data/appsoft/kafka
-KAFKA_USER=kafka
 
 CONFIG_FILE=$KAFKA_HOME/config/server.properties
 
 OPTIONS='-daemon'
+
+PS_NAME=kafka.Kafka
+
+EXEC_USER=kafka
 
 # Source function library.
 INITD=/etc/rc.d/init.d
@@ -37,7 +40,7 @@ fi
 
 start(){
     echo -n "Starting ${NAME} service: "
-    $SU -l ${KAFKA_USER} -c "${KAFKA_HOME}/bin/kafka-server-start.sh ${OPTIONS} ${CONFIG_FILE}"
+    $SU -l ${EXEC_USER} -c "${KAFKA_HOME}/bin/kafka-server-start.sh ${OPTIONS} ${CONFIG_FILE}"
     ret=$?
     if [ $ret -eq 0 ]
     then
@@ -51,7 +54,7 @@ start(){
 
 stop(){
     echo -n "Stopping ${NAME} service: "
-    $SU -l ${KAFKA_USER} -c "${KAFKA_HOME}/bin/kafka-server-stop.sh"
+    $SU -l ${EXEC_USER} -c "${KAFKA_HOME}/bin/kafka-server-stop.sh"
     ret=$?
     if [ $ret -eq 0 ]
     then
@@ -65,7 +68,7 @@ stop(){
 
 hardstop(){
     echo -n "Stopping (hard) ${NAME} service: "
-    $SU -l ${KAFKA_USER} -c "ps -ef | grep kafka.Kafka | grep -v grep | awk '{print \$2}' | xargs kill -9"
+    $SU -l ${EXEC_USER} -c "ps -ef | grep $PS_NAME | grep -v grep | awk '{print \$2}' | xargs kill -9"
     ret=$?
     if [ $ret -eq 0 ]
     then
@@ -78,7 +81,7 @@ hardstop(){
 }
 
 status(){
-    c_pid=`ps -ef | grep kafka.Kafka | grep -v grep | awk '{print $2}'`
+    c_pid=`ps -ef | grep $PS_NAME | grep -v grep | awk '{print $2}'`
     if [ "$c_pid" = "" ] ; then
       echo "Stopped"
       exit 3
