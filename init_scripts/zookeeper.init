@@ -1,0 +1,91 @@
+#!/bin/sh
+#
+# chkconfig: 345 20 90
+# description: zookeeper
+#
+
+ZOOKEEPER_HOME=/data/appsoft/zookeeper
+
+EXEC_USER=zookeeper
+
+# OPTIONS=""
+
+# Source function library.
+INITD=/etc/rc.d/init.d
+source $INITD/functions
+
+# Find the name of the script
+NAME=`basename $0`
+if [ ${NAME:0:1} = "S" -o ${NAME:0:1} = "K" ]
+then
+    NAME=${NAME:3}
+fi
+
+# For SELinux we need to use 'runuser' not 'su'
+if [ -x /sbin/runuser ]
+then
+    SU=runuser
+else
+    SU=su
+fi
+
+start(){
+    echo -n "Starting ${NAME} service: "
+    $SU -l ${EXEC_USER} -c "$ZOOKEEPER_HOME/bin/zkServer.sh start"
+    ret=$?
+    if [ $ret -eq 0 ]
+    then
+        echo_success
+    else
+        echo_failure
+        script_result=1
+    fi
+    echo
+}
+
+stop(){
+    echo -n "Stopping ${NAME} service: "
+    $SU -l ${EXEC_USER} -c "$ZOOKEEPER_HOME/bin/zkServer.sh stop"
+    ret=$?
+    if [ $ret -eq 0 ]
+    then
+        echo_success
+    else
+        echo_failure
+        script_result=1
+    fi
+    echo
+}
+
+
+status(){
+    $SU -l ${EXEC_USER} -c "$ZOOKEEPER_HOME/bin/zkServer.sh status"
+}
+
+restart(){
+    echo -n "Restarting ${NAME} service: "
+    $SU -l ${EXEC_USER} -c "$ZOOKEEPER_HOME/bin/zkServer.sh restart"
+    ret=$?
+    if [ $ret -eq 0 ]
+    then
+        echo_success
+    else
+        echo_failure
+        script_result=1
+    fi
+    echo
+}
+
+# See how we were called.  
+case "$1" in
+
+  start|stop|status|restart)
+    $1
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart|status}"
+    exit 2
+    ;;
+esac
+
+exit $script_result
