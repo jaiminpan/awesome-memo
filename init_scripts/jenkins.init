@@ -16,7 +16,7 @@ EXEC_USER=jenkins
 
 JENKINS_LOGFILE=/data/applogs/jenkins/jenkins.log
 
-OPTIONS="--daemon --httpPort $PORT --logfile $JENKINS_LOGFILE"
+OPTIONS="--daemon --httpPort=$PORT --logfile=$JENKINS_LOGFILE"
 
 # Source function library.
 INITD=/etc/rc.d/init.d
