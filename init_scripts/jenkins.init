@@ -8,13 +8,15 @@
 JENKINS_ROOT=/data/appsoft/jenkins
 JENKINS_WAR=$JENKINS_ROOT/jenkins.war
 
+PORT=8080
+
 PS_NAME=jenkins.war
 
 EXEC_USER=jenkins
 
 JENKINS_LOGFILE=/data/applogs/jenkins/jenkins.log
 
-OPTIONS="--daemon --logfile $JENKINS_LOGFILE"
+OPTIONS="--daemon --httpPort $PORT --logfile $JENKINS_LOGFILE"
 
 # Source function library.
 INITD=/etc/rc.d/init.d
