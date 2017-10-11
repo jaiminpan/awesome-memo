@@ -45,3 +45,6 @@ Use following command to Connect oracle
 $ORACLE_HOME/bin/sqlplus 'user/password@ORA12'
 ```
 
+
+### Reference
+http://www.xenialab.it/meo/web/white/oracle/HT_IC_RH.htm
