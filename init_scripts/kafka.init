@@ -40,7 +40,7 @@ fi
 
 start(){
     echo -n "Starting ${NAME} service: "
-    $SU -l ${EXEC_USER} -c "${KAFKA_HOME}/bin/kafka-server-start.sh ${OPTIONS} ${CONFIG_FILE}"
+    $SU -l ${EXEC_USER} -c "JMX_PORT=9999 ${KAFKA_HOME}/bin/kafka-server-start.sh ${OPTIONS} ${CONFIG_FILE}"
     ret=$?
     if [ $ret -eq 0 ]
     then
