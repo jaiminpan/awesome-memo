@@ -1,0 +1,121 @@
+#!/bin/sh
+#
+# chkconfig: 345 99 01
+# description:
+#
+
+APP_ROOT=/data/appsoft/waters
+
+EXEC_BIN=/usr/local/java/jdk1.8/bin/java
+
+WORK_DIR=$APP_ROOT
+
+APP_WAR="$APP_ROOT/waters-*war"
+
+PS_NAME='waters-'
+
+OPTIONS="--spring.profiles.active=pe "
+
+# EXEC_USER=java
+
+# Source function library.
+INITD=/etc/rc.d/init.d
+source $INITD/functions
+
+# Find the name of the script
+NAME=`basename $0`
+if [ ${NAME:0:1} = "S" -o ${NAME:0:1} = "K" ]
+then
+	NAME=${NAME:3}
+fi
+
+# For SELinux we need to use 'runuser' not 'su
+if [ -x /sbin/runuser ]
+then
+	SU=runuser
+else
+	SU=su
+fi
+
+start(){
+	echo -n "Starting ${NAME} service: "
+	if [ "x$EXEC_USER" == "x" ]
+	then
+		cd $WORK_DIR
+		nohup $EXEC_BIN -jar $APP_WAR ${OPTIONS} >/dev/null 2>&1 &
+	else
+		$SU -l ${EXEC_USER} -c "cd $WORK_DIR && nohup $EXEC_BIN -jar $APP_WAR ${OPTIONS} >/dev/null 2>&1 &"
+	fi
+	ret=$?
+	if [ $ret -eq 0 ]
+	then
+		echo_success
+	else
+		echo_failure
+		script_result=1
+	fi
+	echo
+}
+
+stop(){
+	echo -n "Stopping ${NAME} service: "
+	if [ "x$EXEC_USER" == "x" ]
+	then
+		`ps -ef | grep $PS_NAME | grep -v grep | awk '{print \$2}' | xargs kill`
+	else
+		$SU -l ${EXEC_USER} -c "ps -ef | grep $PS_NAME | grep -v grep | awk '{print \$2}' | xargs kill"
+	fi
+	ret=$?
+	if [ $ret -eq 0 ]
+	then
+		echo_success
+	else
+		echo_failure
+		script_result=1
+	fi
+	echo
+}
+
+hardstop(){
+	echo -n "Stopping (hard) ${NAME} service: "
+	if [ "x$EXEC_USER" == "x" ]
+	then
+		`ps -ef | grep $PS_NAME | grep -v grep | awk '{print \$2}' | xargs kill -9`
+	else
+		$SU -l ${EXEC_USER} -c "ps -ef | grep $PS_NAME | grep -v grep | awk '{print \$2}' | xargs kill -9"
+	fi
+	ret=$?
+	if [ $ret -eq 0 ]
+	then
+		echo_success
+	else
+		echo_failure
+		script_result=1
+	fi
+	echo
+}
+
+status(){
+	c_pid=`ps -ef | grep $PS_NAME | grep -v grep | awk '{print $2}'`
+	if [ "$c_pid" = "" ] ; then
+	  echo "Stopped"
+	  exit 3
+	else
+	  echo "Running $c_pid"
+	  exit 0
+	fi
+}
+
+# See how we were called.
+case "$1" in
+
+  start|stop|hardstop|status)
+	$1
+	;;
+  *)
+	echo "Usage: $0 {start|stop|hardstop|status}"
+	exit 2
+	;;
+esac
+
+exit $script_result
