@@ -32,3 +32,24 @@ class BlockedPool(Pool):
                 
         return self.apply_async(func, args, kwds, callback, error_callback)
 
+def call_main():
+
+    pool = BlockedPool(10, 5000, 1000)
+
+    num = 0
+    for input in range(1000):
+
+        pool.apply_block_async(lambda x:print(x), (input, ))
+
+        if num % 10 == 0:
+            nowtime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+            sys.stdout.write('\rprogress: %s, (% 10d)%s' % (nowtime, num, phone_num))
+            sys.stdout.flush()
+
+        num = num + 1
+
+    pool.close()
+    pool.join()
+
+if __name__ == "__main__":
+    call_main()
