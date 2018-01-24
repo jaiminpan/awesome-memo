@@ -55,6 +55,16 @@ def ResultSetIter(cursor, arraysize=1000):
             break
         yield results
 
+def ResDictIter(cursor, arraysize=1000):
+	'An iterator that uses fetchmany to keep memory usage down'
+	columns = [desc[0] for desc in cursor.description]
+	while True:
+		results = cursor.fetchmany(arraysize)
+		if not results:
+			break
+		for tup in results:
+			yield dict(zip(columns, tup))
+
 class PlumberConnBase(object):
     def __init__(self):
         pass
@@ -82,6 +92,10 @@ class PlumberConnBase(object):
     def find_batch(self):
         for batch in ResultSetIter(self.cursor):
             yield batch
+
+	def find_dict(self):
+		for rdict in ResDictIter(self.cursor):
+			yield rdict
 
 # Oracle Part
 # ===============================================================#
