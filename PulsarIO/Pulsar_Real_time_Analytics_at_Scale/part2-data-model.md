@@ -28,22 +28,23 @@ Session化是通过一个共同键来识别相关事件分组的状态管理流�
 
 2.5 实时多维度聚合计算
 ---------------------------
-聚合就是根据一组维度做汇总数据。关系型数据库或者PIG或者HIVE提供的聚合功能有COUNT，SUM，MIN，MAX，AVG，DISTINCT COUNT，TOP N，QUANTILES等。
+聚合就是根据一组维度做汇总数据。**RDBMS**或者**PIG**或者**HIVE**提供的聚合功能有`COUNT`，`SUM`，`MIN`，`MAX`，`AVG`，`DISTINCT COUNT`，`TOP N`，`QUANTILES`等。
 
-看一下在关系型数据库世界的语句：`select count(*) as METRIC1, column1, column2 from SOMETABLE group by column1, column2` 。这语句在一个叫SOMETABLE的表来计算column1和column2的总数。
+看一下在RDBMS世界的语句：`select count(*) as METRIC1, column1, column2 from SOMETABLE group by column1, column2` 。这语句使用一个叫SOMETABLE的表来计算column1和column2的总数。
 
 这个查询运行在一个单独的数据库实例上，如果在共享环境，一个应用可能需要运行在每个分片上然后通过每个分片上的结果再进行聚合，如果被扫描的行数很大这个查询就会执行很长时间。
 
 现在考虑一下在实时流环境中相似的查询。事件中的维度代替列和事件流代替数据库表。在章节2.1我们提到电商系统通常每秒要处理数据百万条事件。跟数据库不同，实时数据流是持续地处理数据的，我们需要给持续处理的聚合功能提供一个开始时间和结束时间。我们的实现方式是每个聚合执行定义一个窗口[注1]，这个窗口是滚动窗口（`Tumbing widows`）或者旋转窗口(`Rolling windows`)。
 下面一个平常类SQL语句展示了使用数据流实现在时间窗口为10秒以D1和D2分组的汇总查询:
-
-create context MCContext start @now end pattern [timer:interval(10)]  
+```
+create context MCContext start @now end pattern [timer:interval(10)];  
 
 context MCContext    
-insert into AGGREGATE select count(*) as METRIC1, D1, D2, FROM RAWSTREAM group by D1,D2 output snapshot wher terminated;     
+insert into AGGREGATE select count(*) as METRIC1, D1, D2
+  FROM RAWSTREAM group by D1,D2 output snapshot when terminated;     
 
 select * from AGGERGATE;
-
+```
 由于实时流处理都是在内存中所以我们受到内存空间的限制。由于流式数据的是按某个范围计算，大量数据统计会对内存资源造成很大的压力,因此我们建议把时间窗口设小（10秒）,我们建议使用一个分区的策略来实现集群中的计算节点作负载均衡，事件通过一致性哈稀算法[注2]来分配到各个节点，这算法通过一个在逻辑环的哈稀键来查找事件需要被分配的节点。这哈稀键通过一个或多个事件维度来计算一个组合键的哈稀值(H(D1,D2,...))。我们建议使用一个128 bit的哈稀函数，这样我们就能得一个优雅的跨集群的事件。
 
 通过聚合产生的数据就是时间序列数据。由于全部数据都在内存中计算，所以如果节点宕机会导致数据丢失。我们的策略是减小聚合的时间窗（30秒到1分钟），当时间窗口中滚动，数据通过计算引擎就像指标数据一样分发出去，我们把这些事件存储在时间序列数据库，我们就能够创建一个更长时间窗口（1小时或1天）的聚合计算。这个快照式的方法有点像journal[注3]- 我们能够存储快照数据在一个时序数据库然后从不同计算结点中还原。因为大多数我们的用例是统计报表，所我们把这些数据放在一起丢失也会很小。
@@ -55,20 +56,22 @@ select * from AGGERGATE;
 2.6 实时Top N,Precetitles和Distinct Count指标计算
 ---------------------------
 考虑以下查询：以1分钟为时间窗查找以D1，D2，和D3维度作为分组汇总后取数量最大的10个。
-
-create context MCContext start @now end pattern [timer:interval(60)]
+```
+create context MCContext start @now end pattern [timer:interval(60)];
 
 context MCContext
 
 insert into TOPITEMS select count(1) from RAWEventStream group by D1, D2, D3 order by count(1) limit 10;
 
+select * from TOPITEMS;
+```
 
 这个查询的执行成本与D1，D2，D3组合维度和事件进入时间窗口的速率成正比。如果一个或多个维度的数据量很大，大量的计数器计算就会占用大量的内存资源。`ORDER BY` 指令当时间窗口滚动的时候会把数据作排序，这会消耗很多计算资源从而已导致系统就慢，我们系统是构建在Javba，这会导致频繁的GC，其他非常有用指标统计像Distinct Count和Percetitles也有类似的问题,因为他们是内存密集型。
 
 然而，我们考虑使用近似算法去计算Top N，百分比和Distinct count查询，然后我们可以在一个可以控制固定的内存中操作，我们建议使用多次估算技术去计算Top N，在这个方法里我们只会对内存中的组合频繁操作。当存储满了，最常用的分组从内存中丢弃，然后成为一个新的计数。我们已经使用了一个特殊的聚合函数来实现这个算法，然而我们可以使用以下这个查询：
-
+```
 select TopN(1000, 10, D1) as topItems from RawEvent();
-
+```
 聚合函数每一个参数指的是容量，第二个参数相当返回的最大数据数（TopN），最后一个参数 是事件的维度。
 
 我们建议使用HyperLogLog[注4]和TDigest[注5]算法来计算Distinct Count和Percentiles。我们提供这两种计算的聚合函数，我们可以在事件流中使用一个类SQL来实现。
