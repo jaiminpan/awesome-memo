@@ -17,6 +17,7 @@
     <property name="FILE_LOG_PATTERN"
               value="%d{yyyy-MM-dd HH:mm:ss.SSS} ${LOG_LEVEL_PATTERN:-%5p} ${PID:- } --- [%t] %-40.40logger{39} %clr(--%line){gray} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
 
+
     <!-- console part -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
@@ -26,20 +27,19 @@
         </encoder>
     </appender>
     
-    <property name="LOG_PATH" value="${PROJ_HOME:-.}/logs"/>
+    <property name="LOG_HOME" value="${PROJ_HOME:-.}/logs"/>
 
     <!-- file part -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!-- rollover daily -->
-            <FileNamePattern>
-                ${LOG_PATH}/@{project.artifactId}.%d{yyyy-MM-dd}.%i.log
-            </FileNamePattern>
-            <maxHistory>90</maxHistory>
-            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">  
-                <!-- or whenever the file size reaches 100MB -->  
-                <maxFileSize>100MB</maxFileSize>  
-            </timeBasedFileNamingAndTriggeringPolicy>  
+            <fileNamePattern>
+                ${LOG_HOME}/@{project.artifactId}.%d{yyyy-MM-dd}.%i.log
+            </fileNamePattern>
+            <!-- each file should be at most 100MB, keep 60 days worth of history, but at most 20GB -->
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>60</maxHistory>
+            <totalSizeCap>20GB</totalSizeCap>
         </rollingPolicy>
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <Pattern>
