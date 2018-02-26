@@ -7,7 +7,8 @@
     <!-- equal debug false -->
     <!--<statusListener class="ch.qos.logback.core.status.NopStatusListener" />-->
 
-    <property name="LOG_FILE" value="${PROJ_HOME:-.}/logs/@{project.artifactId}.log"/>
+    <property name="LOG_FILE_PATH" value="${PROJ_HOME:-.}/logs"/>
+    <property name="LOG_FILE_NAME" value="@{project.artifactId}"/>
 
     <property name="LOG_PATTERN"
               value="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-16.16thread] [%-5level] [%-36.36logger{36}:%-5.5line] - %msg%n"/>
@@ -21,10 +22,9 @@
 
     <!-- file part -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_FILE}</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!-- rollover daily -->
-            <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+            <fileNamePattern>${LOG_FILE_PATH}/${LOG_FILE_NAME}.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <!-- each file should be at most 100MB, keep 60 days worth of history, but at most 20GB -->
             <maxFileSize>100MB</maxFileSize>
             <maxHistory>60</maxHistory>
