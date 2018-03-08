@@ -97,6 +97,9 @@ bin/kafka-run-class.sh kafka.tools.GetOffsetShell --broker-list localhost:9092 -
 bin/kafka-consumer-groups.sh --zookeeper localhost:2181 --list (old api)
 bin/kafka-consumer-groups.sh --new-consumer --bootstrap-server localhost:9092 --list (new api)
 
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group test-consumer-group
+
 # View the details of a consumer group
 bin/kafka-consumer-groups.sh --zookeeper localhost:2181 --describe --group <group name>
 
