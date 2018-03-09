@@ -47,8 +47,10 @@ bin/kafka-topics.sh --zookeeper localhost:2181 --alter --topic mytopic --delete-
 bin/kafka-console-producer.sh --broker-list localhost:9092 --topic my_topic
 bin/kafka-console-producer.sh --broker-list localhost:9092 --topic my_topic < file.log
 
-# kafka consumer
+# (old) kafka consumer
 bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic my_topic --from-beginning
+# (new) kafka consumer
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic my_topic --from-beginning
 
 # reassign replica for topic
 bin/kafka-reassign-partitions.sh --zookeeper localhost:2181 --reassignment-json-file custom-reassignment.json --execute
