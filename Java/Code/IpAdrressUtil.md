@@ -1,4 +1,16 @@
 
+Java例子是这样使用的： 
+首先在项目中加入maven支持
+```  
+        <dependency>
+            <groupId>com.maxmind.geoip2</groupId>
+            <artifactId>geoip2</artifactId>
+            <version>2.8.1</version>
+        </dependency>
+```
+
+通过Request获取IP
+```
 public class IpAdrressUtil {
     /**
      * 获取Ip地址
@@ -39,9 +51,11 @@ public class IpAdrressUtil {
         return XFor;
     }
 }
+```
 
 
-
+然后通过GeoLite2查询得到省份、城市
+```
 public static void main(String[] args) throws Exception{      
       // 创建 GeoLite2 数据库     
       File database = new File("/Users/admin/GeoLite2-City.mmdb");     
@@ -75,7 +89,11 @@ public static void main(String[] args) throws Exception{
       System.out.println(location.getLongitude()); // 108.3167
 
 }  
+```
 
+
+可以直接创建一个Service
+```
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.model.CityResponse;
 import org.apache.commons.lang3.StringUtils;
@@ -119,7 +137,7 @@ public class IpAddressService {
     }
 
 
-    public String getSubdivision(String ipAddress){
+    public static String getSubdivision(String ipAddress){
         try {
             CityResponse response = reader.city(InetAddress.getByName(ipAddress));
             return response.getMostSpecificSubdivision().getNames().get("zh-CN");
@@ -129,4 +147,4 @@ public class IpAddressService {
         }
     }
 }
-
+```
