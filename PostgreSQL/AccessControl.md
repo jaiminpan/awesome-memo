@@ -1,0 +1,22 @@
+# AccessControl
+
+
+```sh
+Revoke ALL ON DATABASE xxx from public;
+Revoke ALL ON SCHEMA public from public;
+
+# OPTION
+CREATE SCHEMA sss;
+ALTER DATABASE XXX SET search_path TO sss;
+
+CREATE USER xxx password 'XXX' with role xxx;
+
+# GRANT
+GRANT CONNECT ON DATABASE XXX TO XXX;
+GRANT USAGE ON SCHEMA SSS TO XXXUSER;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA SSS grant select, insert, update, delete, references on tables to XXXUSER;
+ALTER DEFAULT PRIVILEGES IN SCHEMA SSS grant all on SEQUENCES TO XXXUSER;
+ALTER DEFAULT PRIVILEGES IN SCHEMA SSS grant EXECUTE on FUNCTIONS TO XXXUSER;
+
+```
