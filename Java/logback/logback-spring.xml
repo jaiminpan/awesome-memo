@@ -2,7 +2,7 @@
 
 <configuration scan="false" scanPeriod="10 seconds" debug="false">
 
-    <property name="LOG_FILE" value="${LOG_FILE:-${PROJ_HOME:-.}/logs/@{project.artifactId}.log}"/>
+    <property name="LOG_FILE" value="${LOG_FILE:-${PROJ_HOME:-.}/logs/@project.artifactId@.log}"/>
 
     <property name="LOG_PATTERN"
               value="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-16.16thread] [%-5level] [%-36.36logger{36}:%-5.5line] - %msg%n"/>
