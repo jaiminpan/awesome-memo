@@ -18,8 +18,8 @@ mv consul /usr/local/bin
 ```
 
 ### Config Dir
-config Location is `/etc/consul.d/config.json` OR `/data/etc/consul.d/config.json`  
-Reference file `consul.d/config.json`
+Config location is `/etc/consul.d/config.json` OR `/data/etc/consul.d/config.json`  
+Reference `consul.d/config.json`
 
 ## Start
 consul agent -config-dir=/data/etc/consul.d
@@ -30,6 +30,6 @@ http://127.0.0.1:8500/
 
 
 ## Other Config Guide
-https://www.consul.io/docs/agent/options.html#command-line-options
-https://my.oschina.net/guol/blog/353391
-https://www.cnblogs.com/sunsky303/p/9209024.html
+https://www.consul.io/docs/agent/options.html#command-line-options  
+https://my.oschina.net/guol/blog/353391  
+https://www.cnblogs.com/sunsky303/p/9209024.html  
