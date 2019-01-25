@@ -47,10 +47,6 @@ public class XXXApplication {
 
 ## application.properties
 ```
-management.server.servlet.context-path=actuator
-management.endpoint.health.show-details=always
-#management.health.redis.enabled=false
-
 spring.cloud.consul.enabled=true
 spring.cloud.consul.host=10.81.xx.xxx
 spring.cloud.consul.port=8500
