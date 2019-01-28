@@ -3,9 +3,11 @@
   "data_dir": "/data/appdatas/consul",
   "log_level": "INFO",
   "enable_syslog": true,
+  "syslog_facility": "local0",
   "node_name": "mynode",
   "server": true,
-  "bootstrap_expect": 3,
+  # only one can be on boostrap, others be commented
+  "bootstrap_expect": 1,
   "bind_addr": "10.81.xxx.xxx1",
   "addresses": {
     "http": "0.0.0.0"

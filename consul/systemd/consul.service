@@ -1,0 +1,23 @@
+# vi /etc/systemd/system/consul.service
+
+[Unit]
+Description=Consul service discovery agent
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+User=consul
+Group=consul
+Type=simple
+EnvironmentFile=/etc/sysconfig/consul
+Environment=GOMAXPROCS=2
+ExecStartPre=[ -f "/run/consul/consul.pid" ] && /usr/bin/rm -f /run/consul/consul.pid
+ExecStartPre=/usr/local/bin/consul validate /etc/consul.d
+ExecStart=/usr/local/bin/consul agent $CONSUL_OPTIONS
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGTERM
+Restart=on-failure
+TimeoutStopSec=5
+
+[Install]
+WantedBy=multi-user.target

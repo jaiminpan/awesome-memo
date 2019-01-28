@@ -1,0 +1,3 @@
+# vi /etc/sysconfig/consul
+
+CONSUL_OPTIONS="-config-dir=/etc/consul.d -pid-file=/run/consul/consul.pid"
