@@ -24,9 +24,7 @@ Consul 是 HashiCorp 公司推出的开源工具，用于实现分布式系统�
 
 
 
-Consul 工作原理：
-
-
+#### Consul 工作原理：
 
 1、当 Producer 启动的时候，会向 Consul 发送一个 post 请求，告诉 Consul 自己的 IP 和 Port
 2、Consul 接收到 Producer 的注册后，每隔10s（默认）会向 Producer 发送一个健康检查的请求，检验Producer是否健康
