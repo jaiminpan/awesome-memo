@@ -1,0 +1,16 @@
+{
+  "datacenter": "sz-dc",
+  "data_dir": "/home/java/consul/data",
+  "log_level": "INFO",
+  "addresses": {
+    "http": "0.0.0.0"
+  },
+  "retry_join": [
+    "10.81.xx.xxx2",
+    "10.81.xx.xxx3"
+  ],
+  "retry_interval": "10s",
+  "skip_leave_on_interrupt": true,
+  "leave_on_terminate": false,
+  "rejoin_after_leave": true
+}
