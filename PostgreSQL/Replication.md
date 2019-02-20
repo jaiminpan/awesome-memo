@@ -16,7 +16,7 @@ wal_level = replica
 ```
 host    replication     repadmin        10.0.0.0/16      md5
 ```
-reload conf
+##### reload conf
 > systemctl reload xxx.service
 
 ```
@@ -25,7 +25,7 @@ chown postgres:postgres recovery.done
 chmod 600 recovery.done
 ```
 
-vi recovery.done
+##### vi recovery.done  
 ```
 standby_mode = on
 primary_conninfo = 'host=10.0.xx.xx port=xxx user=repadmin password=pwd'
@@ -48,13 +48,13 @@ pg_basebackup -D /data/appdatas/pgsql/11/dataxx -Fp -P -X stream -v -h 10.0.x.x 
 
 
 ## 备库操作  
-mv recovery.done recovery.conf
-vi recovery.conf
+##### mv recovery.done recovery.conf  
+##### vi recovery.conf  
 ```
 primary_slot_name = 'rep_slot_1'
 ```
 
-option 修改 postgresql.conf
+##### option 修改 postgresql.conf
 ```
 hot_standby_feedback = on
 ```
