@@ -31,6 +31,9 @@ standby_mode = on
 primary_conninfo = 'host=10.0.xx.xx port=xxx user=repadmin password=pwd'
 ```
 
+#### Ensure
+Make sure all file in postgres data directory has accessed permission by `postgres`
+
 ## Step 2
 ####  生成备库
 ```
