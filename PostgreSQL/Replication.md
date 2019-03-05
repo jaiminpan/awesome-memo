@@ -40,7 +40,8 @@ Make sure all file in postgres data directory has accessed permission by `postgr
 mkdir /data/appdatas/pgsql/data_xx
 chown postgres /data/appdatas/pgsql/data_xx
 chmod 700 /data/appdatas/pgsql/data_xx
-  
+
+su - postgres
 export PGPASSWORD="pwd"
 pg_basebackup -D /data/appdatas/pgsql/11/dataxx -Fp -P -X stream -v -h 10.0.x.x -p xxx -U repadmin
 ```
