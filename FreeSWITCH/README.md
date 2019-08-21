@@ -8,16 +8,54 @@ FreeSWITCH 项目最初于2006年1月在O'Reilly Media's ETEL 会议上发布。
 [更多](https://zh.wikipedia.org/wiki/FreeSWITCH)
 
 ## Install
+
+#### 可选安装
+
+*update cmake*
+```sh
+yum remove cmake
+wget https://cmake.org/files/v3.14/cmake-3.14.0.tar.gz
+tar vzxf cmake-3.14.0.tar.gz
+cd cmake-3.14.0
+./configure
+make
+make install
+```
+
+*libks*
+```sh
+yum install libatomic
+git clone https://github.com/signalwire/libks.git
+cd libks
+mkdir build & cd build
+cmake ..
+make
+make install
+ln -sf /usr/lib/pkgconfig/libks.pc  /usr/lib64/pkgconfig/libks.pc
+```
+
+*signalwire*
+```sh
+git clone https://github.com/signalwire/signalwire-c.git
+cd signalwire-c/
+mkdir build & cd build
+cmake ..
+make
+make install
+ln -sf /usr/local/lib/pkgconfig/signalwire_client.pc /usr/lib64/pkgconfig/signalwire_client.pc
+```
+
 #### Prepare
 1. Linux 
   
-```
+```sh
   $ sh support-d/prereq.sh
   $ sh bootstrap.sh
 
   $ ./configure
   # OR
-  $ ./configure --enable-core-pgsql-support
+  $ ./configure -enable-portable-binary \
+    --enable-core-pgsql-support --with-openssl -enable-zrtp 
 
   $ make
   $ sudo make install
@@ -30,7 +68,7 @@ FreeSWITCH 项目最初于2006年1月在O'Reilly Media's ETEL 会议上发布。
 ```
 
 #### 做成服务
-```
+```sh
 [Unit]
 Description=freeswitch
 After=syslog.target
