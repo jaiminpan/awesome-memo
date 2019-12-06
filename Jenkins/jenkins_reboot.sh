@@ -44,7 +44,7 @@ start() {
       echo "================================"
    else
       echo -n "Starting $APP_MAINCLASS ..."
-          nohup $JAVA_HOME/bin/java $JAVA_OPTS -jar $APP_HOME/$APP_MAINCLASS --spring.profiles.active=${PROFILE_ENV}> /dev/null 2>&1 &
+      cd $APP_HOME && nohup $JAVA_HOME/bin/java $JAVA_OPTS -jar $APP_HOME/$APP_MAINCLASS --spring.profiles.active=${PROFILE_ENV}> /dev/null 2>&1 &
       checkpid
       if [ $psid -ne 0 ]; then
          echo "(pid=$psid) [start OK]"
