@@ -79,6 +79,20 @@ stop() {
    fi
 }
 
+##########################################backup()#################################
+backup() {
+
+   if [ ! -d $APP_HOME/backup ] ;then
+     mkdir -p $APP_HOME/backup
+   fi
+
+   echo "********** Begin backup******************"
+   echo "DELETE jar from $APP_HOME/backup"
+   find $APP_HOME/backup -type f -name '*.jar' -delete
+   echo "COPY $APP_HOME/$APP_MAINCLASS -> $APP_HOME/backup"
+   cp $APP_HOME/$APP_MAINCLASS $APP_HOME/backup
+   echo "********** End backup ******************"
+}
 
 ##########################################status()#################################
 status() {
@@ -126,8 +140,11 @@ case "$1" in
    'info')
      info
      ;;
+   'backup')
+     backup
+     ;;
   *)
-     echo "Usage: $0 {start|stop|restart|status|info}"
+     echo "Usage: $0 {start|stop|restart|status|info|backup}"
      exit 1
 esac
 exit 0

@@ -1,0 +1,45 @@
+---
+
+- hosts: www-GateKeeper-java
+  remote_user: java
+  tasks:
+
+  - name: bakckup old package
+    shell: ./jenkins_GateKeeper.sh backup
+    ignore_errors: True
+
+  - name:  stop java
+    shell: ./jenkins_GateKeeper.sh stop
+    register: outMessg
+
+  - name: delete old package
+    shell: rm -rf ~/GateKeeper/*.jar
+    ignore_errors: True
+
+  - debug: var=outMessg.stdout_lines
+    ignore_errors: True
+
+  - name: Copy war  file to client
+    copy: src=/data/home/jenkins/.jenkins/workspace/www-GateKeeper/target.tar.gz dest=~/GateKeeper
+
+  - name: sleep 5
+    shell:  sleep 5
+
+  - name: extract target.tar.gz
+    shell:  tar -C ~/GateKeeper -xvzf ~/GateKeeper/target.tar.gz
+
+  - name: mv package
+    shell:  mv -f ~/GateKeeper/target/*.jar  ~/GateKeeper
+
+  - name: Clean target.tar.gz
+    shell:  rm -rf ~/GateKeeper/target*
+    ignore_errors: True
+
+  - name: start java
+    shell: ./jenkins_GateKeeper.sh restart
+
+  - shell: ps -eo pid,cmd,etime,stime | grep java
+    register: ps
+
+  - debug: var=ps.stdout_lines
+
