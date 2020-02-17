@@ -64,6 +64,7 @@ vi /etc/security/limits.conf
 * hard nproc 4096
 
 # when bootstrap.memory_lock: true
+# * can replace to username
 * soft memlock unlimited
 * hard memlock unlimited
 ```
@@ -79,4 +80,14 @@ vi /etc/security/limits.conf
 
 启动完成后，访问地址，显示如下内容表示启动成功。
 
-#### Misc
+#### 分词插件
+
+#####离线
+wget https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v6.8.4/elasticsearch-analysis-ik-6.8.4.zip
+#./elasticsearch-plugin install file://ik的文件路径
+./elasticsearch-plugin install file:///usr/local/elasticsearch-analysis-ik-6.8.4.zip
+#####在线
+./bin/elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v6.8.4/elasticsearch-analysis-ik-6.8.4.zip
+
+### pinyin
+https://github.com/medcl/elasticsearch-analysis-pinyin/releases/download/v6.8.6/elasticsearch-analysis-pinyin-6.8.6.zip
