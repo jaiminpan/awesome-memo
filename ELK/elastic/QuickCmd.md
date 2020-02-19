@@ -44,23 +44,38 @@ curl -H "Content-Type: application/json" -XPUT /goodsidx_latest -d \
     },
     "analysis": {
       "tokenizer": {
+        "name_ngram_tokenizer": {
+          "type": "nGram",
+          "min_gram": 2,
+          "max_gram": 6,
+          "token_chars": [ "letter", "digit" ]
+        },
         "ngram_tokenizer": {
           "type": "nGram",
           "min_gram": 4,
           "max_gram": 8,
-          "token_chars": [
-            "letter",
-            "digit"
-          ]
+          "token_chars": [ "letter", "digit" ]
         }
       },
       "analyzer": {
+        "name_ngram_tokenizer_analyzer": {
+          "type": "custom",
+          "tokenizer": "name_ngram_tokenizer",
+          "filter": [
+            "lowercase"
+          ]
+        },
         "ngram_tokenizer_analyzer": {
           "type": "custom",
           "tokenizer": "ngram_tokenizer",
           "filter": [
             "lowercase"
           ]
+        },
+        "ngram_pinyin_analyzer": {
+          "type": "custom",
+          "tokenizer": "name_ngram_tokenizer",
+          "filter": "name_pinyin_filter"
         },
         "ik_pinyin_analyzer": {
           "type": "custom",
@@ -69,6 +84,21 @@ curl -H "Content-Type: application/json" -XPUT /goodsidx_latest -d \
         }
       },
       "filter": {
+         "name_pinyin_filter": {
+          "type": "pinyin",
+          "keep_none_chinese": false,
+          "keep_separate_first_letter": false,
+          "keep_full_pinyin": false,
+          "keep_first_letter": true,
+          "keep_none_chinese_in_first_letter": true,
+          "keep_joined_full_pinyin": true,
+          "keep_none_chinese_in_joined_full_pinyin": true,
+          "keep_original": false,
+          "limit_first_letter_length": 10,
+          "lowercase": true,
+          "ignore_pinyin_offset": true,
+          "remove_duplicated_term": true
+        },
         "pinyin_filter": {
           "type": "pinyin",
           "keep_first_letter": true,
@@ -77,6 +107,7 @@ curl -H "Content-Type: application/json" -XPUT /goodsidx_latest -d \
           "keep_original": false,
           "limit_first_letter_length": 10,
           "lowercase": true,
+          "ignore_pinyin_offset": true,
           "remove_duplicated_term": true
         }
       }
@@ -102,18 +133,29 @@ curl -H "Content-Type: application/json" -XPUT /goodsidx_latest/_mapping/goodsty
       },
       "barcode" : {
         "type" : "keyword",
-        "copy_to": "mixcodekey"
+        "copy_to": "codekey"
       },
-      "mixcodekey" : {
+      "codekey" : {
         "type" : "text",
         "store": false,
         "analyzer" : "ngram_tokenizer_analyzer",
         "search_analyzer": "standard"
       },
       "name" : {
+        "type" : "keyword",
+        "copy_to": [ ""namepy", "namekey" , "mixnamekey"]
+      },
+      "namepy" : {
         "type" : "text",
-        "index": false,
-        "copy_to": "mixnamekey"
+        "store": false,
+        "analyzer" : "ngram_pinyin_analyzer",
+        "search_analyzer" : "standard"
+      },
+      "namekey" : {
+        "type" : "text",
+        "store": false,
+        "analyzer" : "name_ngram_tokenizer_analyzer",
+        "search_analyzer": "standard"
       },
       "skuattr" : {
         "type" : "text",
@@ -184,6 +226,28 @@ curl -H "Content-Type: application/json" -XPOST /_reindex?wait_for_completion=fa
 ### 查看
 curl -H "Content-Type: application/json" -XGET /_tasks/[taskid]
 
+```
+
+## analyzer 更新
+```sh
+curl -X POST 'http://localhost:9200/thegame/_close'
+
+curl -X PUT 'http://localhost:9200/thegame/_settings' -d \
+'{
+  "analysis": {
+    "analyzer": {
+      "full_name": {
+        "filter": [
+          "standard",
+          "lowercase",
+          "asciifolding"
+        ],
+          "type": "custom",
+          "tokenizer": "standard"
+      }
+    }
+  }
+}'
 ```
 
 ### analyze 测试
