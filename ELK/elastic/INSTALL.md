@@ -64,8 +64,8 @@ vi /etc/security/limits.conf
 * hard nproc 4096
 
 # when bootstrap.memory_lock: true
-# * soft memlock unlimited
-# * hard memlock unlimited
+* soft memlock unlimited
+* hard memlock unlimited
 ```
 
 4.启动ES
