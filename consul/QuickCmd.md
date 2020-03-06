@@ -16,10 +16,16 @@ curl  http://localhost:8500/v1/agent/checks
 # config
 curl http://localhost:8500/v1/kv/commons/test/config?raw
 
-curl -s localhost:8500/v1/catalog/service/web
 ```
 
-## Service
+## all Service
+```
+curl -s localhost:8500/v1/catalog/service/web
+
+```
+
+
+## agent Service
 ```
 # register
 curl -XPUT http://localhost:8500/v1/agent/service/register -d \
