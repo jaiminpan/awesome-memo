@@ -5,6 +5,9 @@ JAVA_HOME="/usr/local/java/jdk1.8.0_112"
 
 APP_HOME="/home/java/{PROJ_DIR}"
 
+CONSUL_NODE="127.0.0.1:8500"
+SERVICE_NAME=${SERVICE_NAME_IN_CONSUL}
+
 PROFILE_ENV="prod"
 
 PIP=`ls -l ${APP_HOME}/* |grep jar |head -1  |awk '{print $9}' | awk -F '/' '{print $5}' `
@@ -105,7 +108,7 @@ status() {
    fi
 }
 
-##########################################info()#################################
+########################################## info() #################################
 info() {
    echo "System Information:"
    echo "****************************"
@@ -117,9 +120,29 @@ info() {
    echo
    echo "APP_HOME=$APP_HOME"
    echo "APP_MAINCLASS=$APP_MAINCLASS"
+   echo "APP_SERVICE_NAME=$SERVICE_NAME"
    echo "****************************"
 }
 
+########################################## pause() #################################
+pause() {
+  SERVICE_IDS=`curl http://${CONSUL_NODE}/v1/agent/services | python -m json.tool | grep ID | awk '{print $2}'|sed 's/["|,]//g' | grep ${SERVICE_NAME}`
+  for SERVICE_ID in ${SERVICE_IDS}
+  do
+    echo "Service \"${SERVICE_ID}\" pause "
+    curl -s -XPUT "http://$CONSUL_NODE/v1/agent/service/maintenance/${SERVICE_ID}?enable=true&reason=${SERVICE_NAME}_deploying"
+  done
+}
+
+########################################## resume() #################################
+resume() {
+  SERVICE_IDS=`curl http://${CONSUL_NODE}/v1/agent/services | python -m json.tool | grep ID | awk '{print $2}'|sed 's/["|,]//g' | grep ${SERVICE_NAME}`
+  for SERVICE_ID in ${SERVICE_IDS}
+  do
+    echo "Service \"${SERVICE_ID}\" resume "
+    curl -s -XPUT "http://$CONSUL_NODE/v1/agent/service/maintenance/${SERVICE_ID}?enable=false"
+  done
+}
 
 ########################################## main() #################################
 
@@ -139,6 +162,12 @@ case "$1" in
      ;;
    'info')
      info
+     ;;
+   'pause')
+     pause
+     ;;
+   'resume')
+     resume
      ;;
    'backup')
      backup

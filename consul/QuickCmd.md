@@ -15,15 +15,15 @@ curl  http://localhost:8500/v1/agent/checks
 
 # config
 curl http://localhost:8500/v1/kv/commons/test/config?raw
+
+curl -s localhost:8500/v1/catalog/service/web
 ```
 
 ## Service
 ```
 # register
-curl  --request PUT  --data @test.json http://localhost:8500/v1/agent/service/register
-
-vi test.json
-{
+curl -XPUT http://localhost:8500/v1/agent/service/register -d \
+'{
   "ID": "myinst_id",
   "Name": "service_name",
   "Tags": [
@@ -38,12 +38,21 @@ vi test.json
     "HTTP": "http://localhost:5000/health",
     "Interval": "10s"
   }
-}
+}'
 
 # delete
-curl  --request PUT  http://localhost:8500/v1/agent/service/deregister/myinst_id
+curl -s -XPUT localhost:8500/v1/agent/service/deregister/${SERVICE_ID}
 
 # set check passing：
-curl http://localhost:8500/v1/agent/check/pass/myinst_id
+curl -s localhost:8500/v1/agent/check/pass/${SERVICE_ID}
+
+# list critical service
+curl -s localhost:8500/v1/health/state/critical | python -m json.tool
+
+# maintenance
+curl -s -XPUT "localhost:8500/v1/agent/service/maintenance/${SERVICE_ID}?enable=true&reason=deploy"
+
+# maintenance resume
+curl -s -XPUT "localhost:8500/v1/agent/service/maintenance/${SERVICE_ID}?enable=false"
 
 ```
