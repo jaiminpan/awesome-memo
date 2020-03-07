@@ -14,8 +14,8 @@
   - name: extract target.tar.gz
     shell:  tar -C ~/GateKeeper -xvzf ~/GateKeeper/target.tar.gz
 
-  - name: sleep 2
-    shell:  sleep 2
+  - name: sleep 5
+    shell:  sleep 5
 
   - name:  stop java
     shell: ./jenkins_GateKeeper.sh stop
