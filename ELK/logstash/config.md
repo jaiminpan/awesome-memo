@@ -66,10 +66,13 @@ output {
   elasticsearch {
     hosts => ["http://127.0.0.1:9200"]
     index => "log-main-%{+YYYY.MM.dd}"
+    # index in weekly
+    # index => "applog-main-%{+xxxx.ww}"
     #user => "elastic"
     #password => "changeme"
   }
 }
+
 ```
 
 
