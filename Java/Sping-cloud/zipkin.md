@@ -81,8 +81,10 @@ export KAFKA_TOPIC=zipkin
 export KAFKA_STREAMS=2
 
 export STORAGE_TYPE=elasticsearch
-export ES_INDEX=zipkin
 export ES_HOSTS=127.0.0.1:9200
+export ES_INDEX=zipkin
+export ES_INDEX_REPLICAS=0
+# export ES_INDEX_SHARDS=5
 
 nohup java -jar zipkin-server-2.12.9-exec.jar >> /data/applogs/zipkin/zipkin.log 2>&1  &
 ```
