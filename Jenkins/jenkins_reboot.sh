@@ -7,8 +7,8 @@ APP_HOME="/home/java/{PROJ_DIR}"
 
 PROFILE_ENV="prod"
 
-PIP=`ls -l ${APP_HOME}/* |grep jar |head -1  |awk '{print $9}' | awk -F '/' '{print $5}' `
-# PIP=`ls ${APP_HOME}/*  |grep jar| awk -F '/' '{print $5}' `
+PIP=`ls -l ${APP_HOME}/* |grep jar$ |head -1  |awk '{print $9}' | awk -F '/' '{print $5}' `
+# PIP=`ls ${APP_HOME}/*  |grep jar$ | awk -F '/' '{print $5}' `
 
 ### get jar
 APP_MAINCLASS="$PIP" 
