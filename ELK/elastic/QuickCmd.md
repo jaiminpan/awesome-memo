@@ -37,7 +37,7 @@ curl -H "Content-Type: application/json" -XPUT /goodsidx_latest -d \
 '{
   "settings": {
     "index": {
-      "number_of_shards": 32,
+      "number_of_shards": 9,
       "number_of_replicas": 0,
       "routing_partition_size": 1,
       "refresh_interval": -1  // 不落盘，数据准备推荐
@@ -47,25 +47,25 @@ curl -H "Content-Type: application/json" -XPUT /goodsidx_latest -d \
         "name_ngram_tokenizer": {
           "type": "nGram",
           "min_gram": 2,
-          "max_gram": 6,
-          "token_chars": [ "letter", "digit" ]
+          "max_gram": 10,
+          "token_chars": [ "letter", "digit", "punctuation", "symbol" ]
         },
         "ngram_tokenizer": {
           "type": "nGram",
           "min_gram": 4,
-          "max_gram": 8,
-          "token_chars": [ "letter", "digit" ]
+          "max_gram": 10,
+          "token_chars": [ "letter", "digit", "punctuation", "symbol" ]
         }
       },
       "analyzer": {
-        "name_ngram_tokenizer_analyzer": {
+        "name_ngram_analyzer": {
           "type": "custom",
           "tokenizer": "name_ngram_tokenizer",
           "filter": [
             "lowercase"
           ]
         },
-        "ngram_tokenizer_analyzer": {
+        "ngram_analyzer": {
           "type": "custom",
           "tokenizer": "ngram_tokenizer",
           "filter": [
@@ -76,11 +76,6 @@ curl -H "Content-Type: application/json" -XPUT /goodsidx_latest -d \
           "type": "custom",
           "tokenizer": "name_ngram_tokenizer",
           "filter": "name_pinyin_filter"
-        },
-        "ik_pinyin_analyzer": {
-          "type": "custom",
-          "tokenizer": "ik_max_word",
-          "filter": "pinyin_filter"
         }
       },
       "filter": {
@@ -93,17 +88,6 @@ curl -H "Content-Type: application/json" -XPUT /goodsidx_latest -d \
           "keep_none_chinese_in_first_letter": true,
           "keep_joined_full_pinyin": true,
           "keep_none_chinese_in_joined_full_pinyin": true,
-          "keep_original": false,
-          "limit_first_letter_length": 10,
-          "lowercase": true,
-          "ignore_pinyin_offset": true,
-          "remove_duplicated_term": true
-        },
-        "pinyin_filter": {
-          "type": "pinyin",
-          "keep_first_letter": true,
-          "keep_separate_first_letter": false,
-          "keep_full_pinyin": true,
           "keep_original": false,
           "limit_first_letter_length": 10,
           "lowercase": true,
@@ -138,7 +122,7 @@ curl -H "Content-Type: application/json" -XPUT /goodsidx_latest/_mapping/goodsty
       "codekey" : {
         "type" : "text",
         "store": false,
-        "analyzer" : "ngram_tokenizer_analyzer",
+        "analyzer" : "ngram_analyzer",
         "search_analyzer": "standard"
       },
       "name" : {
@@ -154,7 +138,7 @@ curl -H "Content-Type: application/json" -XPUT /goodsidx_latest/_mapping/goodsty
       "namekey" : {
         "type" : "text",
         "store": false,
-        "analyzer" : "name_ngram_tokenizer_analyzer",
+        "analyzer" : "name_ngram_analyzer",
         "search_analyzer": "standard"
       },
       "skuattr" : {
@@ -165,7 +149,7 @@ curl -H "Content-Type: application/json" -XPUT /goodsidx_latest/_mapping/goodsty
       "mixnamekey": {
         "type": "text",
         "store": false,
-        "analyzer" : "ik_pinyin_analyzer"
+        "analyzer" : "ik_max_word"
       }
     }
 }'
@@ -200,7 +184,7 @@ curl -H "Content-Type: application/json" -XPOST /_aliases -d \
 curl -H "Content-Type: application/json" -XPUT /goodsidx_latest/_settings -d \
 '{
   "index" : {
-    "number_of_replicas" : 2,
+    "number_of_replicas" : 1,
     "refresh_interval": "3s"
   }
 }'
@@ -219,7 +203,7 @@ curl -H "Content-Type: application/json" -XPOST /_reindex?wait_for_completion=fa
     "index": "uni:goodsidx"
   },
     "script": {
-    "inline": "ctx._routing = ctx._source.accId"
+    "inline": "ctx._routing = ctx._source.accid"
   }
 }'
 
@@ -254,13 +238,13 @@ curl -X PUT 'http://localhost:9200/thegame/_settings' -d \
 ```sh
 curl -H "Content-Type: application/json" -XPOST /goodsidx_latest/_analyze -d \
 '{
-  "analyzer": "ngram_tokenizer_analyzer",
+  "analyzer": "ngram_analyzer",
   "text":"08871特 殊67354xy814"
 }'
 
 curl -H "Content-Type: application/json" -XPOST /goodsidx_latest/_analyze -d \
 '{
-  "analyzer": "ngram_tokenizer_analyzer",
+  "analyzer": "ngram_analyzer",
   "text":"08 87 1特 殊67 35 4x y814"
 }'
 ```
