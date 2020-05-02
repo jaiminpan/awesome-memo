@@ -260,3 +260,22 @@ curl -XDELETE  /goodsidx_latest
 curl -H "Content-Type: application/json" -XDELETE /goodsidx_latest/[type]/[id]
 
 ```
+
+### 关闭同步和开启，以防重启时候的复制
+```sh
+curl -H "Content-Type: application/json" -XPUT /_cluster/settings -d \
+'{
+ "transient" : {
+ "cluster.routing.allocation.enable" : "none"
+ }
+}'
+
+## do restart node 
+
+curl -H "Content-Type: application/json" -XPUT /_cluster/settings -d \
+'{
+ "transient" : {
+ "cluster.routing.allocation.enable" : "all"
+ }
+}'
+```
