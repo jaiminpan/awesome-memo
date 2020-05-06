@@ -22,6 +22,7 @@ curl http://localhost:8500/v1/kv/commons/test/config?raw
 ```
 curl -s localhost:8500/v1/catalog/service/web
 
+curl localhost:8500/v1/agent/services | python -m json.tool | grep ID | awk '{print $2}'|sed 's/["|,]//g' | grep ${SERVICE_NAME}
 ```
 
 
