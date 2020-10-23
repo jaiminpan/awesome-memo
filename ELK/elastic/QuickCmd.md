@@ -210,6 +210,9 @@ curl -H "Content-Type: application/json" -XPOST /_reindex?wait_for_completion=fa
 ### 查看
 curl -H "Content-Type: application/json" -XGET /_tasks/[taskid]
 
+### 删除任务
+curl -H "Content-Type: application/json" -XPOST /_tasks/[taskid]/_cancel
+
 ```
 
 ## analyzer 更新

@@ -67,7 +67,10 @@ hot_standby_feedback = on
 #### 启动备库
 > /usr/pgsql-11/bin/pg_ctl start -D dataxx
 
+## Step 5
+postgres version > 12
 
+> touch standby.signal
 
 
 
