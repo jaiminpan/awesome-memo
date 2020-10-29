@@ -1,0 +1,37 @@
+---
+
+- hosts: www-AppVue-web
+  vars:  #定义变量
+#    work_space: /data/home/jenkins/.jenkins/workspace/www-job-name
+#    dir_name: /www/sample-name-web
+     timestamp_vary: "{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}" # eval each time
+
+#  become: yes
+#  become_user: root
+
+  tasks:
+
+  - name: set facts
+    set_fact:
+      timestamp: "{{timestamp_vary}}" # eval here
+
+  - name: tar file
+    local_action: shell cd {{work_space}} && tar -cvzf dist.tar.gz dist
+
+  - name: copy tar to remote
+    copy: src={{work_space}}/dist.tar.gz dest=/data/www-datas/{{dir_name}}
+
+  - name: extract tar
+    shell: tar -C /data/www-datas/{{dir_name}} -xvzf /data/www-datas/{{dir_name}}/dist.tar.gz
+
+  - name: rename dist
+    shell: cd /data/www-datas/{{dir_name}} && mv dist dist_{{timestamp}} && rm -f current && ln -s dist_{{timestamp}} current
+#    shell: cd /data/www-datas/{{dir_name}} && mv dist dist_$(date +'%Y%m%d%H%M%S')
+
+  - name: clear bakckup
+    shell: cd /data/www-datas/{{dir_name}} && rm -f dist.tar.gz && mkdir -p backup && cd backup && ls . | xargs rm -rf
+
+  - name: bakckup old package
+    shell: cd /data/www-datas/{{dir_name}} && ls . | grep -v -E "dist_{{timestamp}}|current|backup" | xargs mv -t backup
+    ignore_errors: True
+
