@@ -9,9 +9,11 @@ PROFILE_ENV="prod"
 
 PIP=`ls -l ${APP_HOME}/* |grep jar$ |head -1  |awk '{print $9}' | awk -F '/' '{print $5}' `
 # PIP=`ls ${APP_HOME}/*  |grep jar$ | awk -F '/' '{print $5}' `
+PIP_GENERAL=`ls -l ${APP_HOME}/* |grep jar |head -1  | awk '{print $9}' | awk -F '/' '{print $5}' | awk -F"-" '{print $1}'`
 
 ### get jar
 APP_MAINCLASS="$PIP" 
+APP_GENERAL="$PIP_GENERAL"
 
 JAVA_OPTS="-ms512m -mx512m -Xmn256m -Djava.awt.headless=true -XX:MaxPermSize=128m -Dfile.encoding=UTF-8 "
 
@@ -25,7 +27,7 @@ checkpid() {
    mkdir -p $APP_HOME
    fi
 
-   javaps=`$JAVA_HOME/bin/jps -l | grep $APP_MAINCLASS`
+   javaps=`$JAVA_HOME/bin/jps -l | grep $APP_GENERAL`
    if [ -n "$javaps" ]; then
       psid=`echo $javaps | awk '{print $1}'`
    else
