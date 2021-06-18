@@ -1,0 +1,29 @@
+---
+# ansible-playbook sample
+
+# usage: ansible-playbook deploy.yaml --
+
+- hosts: www-lbhost1-java
+  vars:  #定义变量
+    app_name: gate_nginx
+    work_space: /data/home/jenkins/.jenkins/workspace/www-job-name
+    script_name: jenkins_gate_nginx.sh
+
+  tasks:
+
+  - name: sync nginx conf
+    synchronize:
+      src: "{{ work_space }}/nginx/"
+      dest: /data/appdatas/nginx/
+      delete: yes
+
+  - name: nginx check
+    become: yes
+    become_user: root
+    shell: nginx -t
+
+  - name: nginx reload
+    become: yes
+    become_user: root
+    # shell: service nginx reload
+    service: name=nginx state=reloaded
