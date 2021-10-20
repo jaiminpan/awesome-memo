@@ -1,4 +1,6 @@
 # jumpserver
+Sample for 2.6.1
+
 
 ```sh
 # 升级系统
@@ -203,7 +205,7 @@ $ /etc/init.d/guacd start
 $ sh /opt/tomcat9/bin/startup.sh
 ```
 
-## luna 登录控制台
+## luna 终端控制台
 wget  https://github.com/jumpserver/luna/releases/download/v2.6.1/luna-v2.6.1.tar.gz
 
 ## lina 管理后台

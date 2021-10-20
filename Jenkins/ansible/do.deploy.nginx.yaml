@@ -1,0 +1,35 @@
+
+- hosts: www-saasfront-web
+  vars:  #定义变量
+#    dir_name: /www/sample-name-web
+#    package_name:
+#    pack_dir_base:
+    timestamp_vary: "{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
+
+#  become: yes
+#  become_user: root
+
+  tasks:
+  - shell: 'date +%Y%m%d%H%M%S'
+    register: current_run_timestamp
+
+  - name: set facts
+    set_fact:
+      timestamp: "{{current_run_timestamp.stdout}}"
+
+  - name: copy file to remote
+    copy: src={{pack_dir_base}}/{{package_name}} dest=/data/www-datas/{{dir_name}}
+
+  - name: extract tar
+    shell: tar -C /data/www-datas/{{dir_name}} -xvzf /data/www-datas/{{dir_name}}/{{package_name}}
+
+  - name: rename dist
+    shell: cd /data/www-datas/{{dir_name}} && mv dist dist_{{timestamp}} && rm -f current && ln -s dist_{{timestamp}} current
+
+  - name: clear bakckup
+    shell: cd /data/www-datas/{{dir_name}} && rm -f dist.tar.gz && mkdir -p backup && cd backup && ls . | xargs rm -rf
+
+  - name: bakckup old package
+    shell: cd /data/www-datas/{{dir_name}} && ls . | grep -v -E "dist_{{timestamp}}|current|backup" | xargs mv -t backup
+    ignore_errors: True
+

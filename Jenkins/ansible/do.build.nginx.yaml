@@ -1,0 +1,31 @@
+---
+
+- name: do package etc stuff
+  hosts: www-saasfront-web
+  vars:  #定义变量
+#    work_space: /data/home/jenkins/.jenkins/workspace/www-job-name
+    timestamp_vary: "{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
+#    pack_dir_name:
+    pack_dir_base: /data/appdatas/jenkins_pack
+
+#  become: yes
+#  become_user: root
+
+  tasks:
+  - shell: 'date +%Y%m%d%H%M%S'
+    register: current_run_timestamp
+
+  - name: set facts
+    set_fact:
+      timestamp: "{{current_run_timestamp.stdout}}"
+
+  - name: tar file
+    local_action: shell cd {{work_space}} && tar -cvzf dist.tar.gz dist
+
+  - name: tar file
+    local_action: shell cd {{work_space}} && mkdir -p {{pack_dir_base}}/{{pack_dir_name}} && mv dist.tar.gz {{pack_dir_base}}/{{pack_dir_name}}/dist_{{timestamp}}.tar.gz
+
+  - name: keep latest 5 then clean other
+    local_action: shell cd {{pack_dir_base}}/{{pack_dir_name}} && ls -t .| grep ".tar.gz" | awk "{if(NR>5){print $1}}" | xargs rm -rf
+
+
