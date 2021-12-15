@@ -1,42 +1,47 @@
 ---
 # ansible-playbook sample
 
-- hosts: www-GateKeeper-java
+- hosts: www-DctCenter-java
+  vars:
+    service_name: "appexs"
+    run_dir: "appexs"
+    work_space: "/data/home/jenkins/.jenkins/workspace/sample"
+    script_name: "jenkins_appexs.sh"
   remote_user: java
   tasks:
 
   - name:  pause service
-    shell: CURRENT_SERVICE_NAME=GateKeeper ./consul_api.sh pause
+    shell: CURRENT_SERVICE_NAME={{service_name}} ./consul_api.sh pause
 
   - name: Copy war  file to client
-    copy: src=/data/home/jenkins/.jenkins/workspace/www-GateKeeper/target.tar.gz dest=~/GateKeeper
+    copy: src={{work_space}}/target.tar.gz dest=~/{{run_dir}}
 
   - name: extract target.tar.gz
-    shell:  tar -C ~/GateKeeper -xvzf ~/GateKeeper/target.tar.gz
+    shell:  tar -C ~/{{run_dir}} -xvzf ~/{{run_dir}}/target.tar.gz
 
   - name: sleep 5
     shell:  sleep 5
 
   - name:  stop java
-    shell: ./jenkins_GateKeeper.sh stop
+    shell: ./{{script_name}} stop
     register: outMessg
 
   - debug: var=outMessg.stdout_lines
     ignore_errors: True
 
   - name: bakckup old package
-    shell: ./jenkins_GateKeeper.sh backup
+    shell: ./{{script_name}} backup
     ignore_errors: True
 
   - name: delete old package
-    shell: rm -rf ~/GateKeeper/*.jar
+    shell: rm -rf ~/{{run_dir}}/*.jar
     ignore_errors: True
 
-  - name: mv new package
-    shell:  mv -f ~/GateKeeper/target/*.jar  ~/GateKeeper
+  - name: mv package
+    shell:  mv -f ~/{{run_dir}}/target/*.jar  ~/{{run_dir}}
 
   - name: start java
-    shell: ./jenkins_GateKeeper.sh restart
+    shell: ./{{script_name}} restart
 
   - shell: ps -eo pid,cmd,etime,stime | grep java
     register: ps
@@ -44,12 +49,11 @@
   - debug: var=ps.stdout_lines
 
   - name: Clean target.tar.gz
-    shell:  rm -rf ~/GateKeeper/target*
+    shell:  rm -rf ~/{{run_dir}}/target*
     ignore_errors: True
 
   - name: sleep 10
     shell:  sleep 10
 
   - name:  resume service
-    shell: CURRENT_SERVICE_NAME=GateKeeper ./consul_api.sh resume
-
+    shell: CURRENT_SERVICE_NAME={{service_name}} ./consul_api.sh resume
