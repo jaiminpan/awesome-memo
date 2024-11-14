@@ -97,7 +97,8 @@ server {
     listen 80;
     server_name cloud.example.com;
     # enforce https
-    return 301 https://$server_name$request_uri;
+    # return 301 https://$server_name$request_uri;
+    return 307 https://$server_name$request_uri;
 }
 
 server {
