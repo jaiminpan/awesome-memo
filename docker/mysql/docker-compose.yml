@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  db:
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/mysql/mysql-server:8.0
+    container_name: mysql_container
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+    ports:
+      - "0.0.0.0:3306:3306"
+    volumes:
+      - C:\work\docker_data\mysql\db_data:/var/lib/mysql
