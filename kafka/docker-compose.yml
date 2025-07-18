@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  kafka:
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/apache/kafka:4.0.0
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    container_name: kafka_broker
+    restart: always
+    environment:
+      KAFKA_NODE_ID: 1 # 每个节点的唯一标识符
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093  # 广播的地址
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.150.10:9092,CONTROLLER://192.168.150.10:9093 # 每个节点的监听地址和端口
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@192.168.150.8:9093 # 列出所有控制器节点的地址和端口, 格式NodeID@host:port,NodeID@host:port,
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1      # 副本数 高可用为 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1 # 事务状态日志 高可用为 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1 # 事务状态日志ISR（In-Sync Replicas） 高可用为 2
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 16
+    volumes:
+      - ./data/kafka-config:/opt/kafka/config
+      - ./data/kafka-data:/var/lib/kafka
+      - ./data/kafka-logs:/var/log/kafka
+
+  kafka_cluster:
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/apache/kafka:4.0.0
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    container_name: kafka_broker
+    restart: always
+    environment:
+      KAFKA_NODE_ID: 3
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.150.10:9092,CONTROLLER://192.168.150.10:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@192.168.150.8:9093,2@192.168.150.9:9093,3@192.168.150.10:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 16
+    volumes:
+      - ./data/kafka-config:/opt/kafka/config
+      - ./data/kafka-data:/var/lib/kafka
+      - ./data/kafka-logs:/var/log/kafka
+

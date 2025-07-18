@@ -11,3 +11,23 @@ services:
       - "0.0.0.0:3306:3306"
     volumes:
       - C:\work\docker_data\mysql\db_data:/var/lib/mysql
+
+services:
+  mysql:
+    image: mysql:8.0.42
+    container_name: mysql8
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234       # root 密码
+      MYSQL_DATABASE: mysql               # 初始数据库
+      MYSQL_USER: test                 # 初始用户
+      MYSQL_PASSWORD: test             # 用户密码
+    volumes:
+      - /Users/jaiminpan/.data/appdatas/mysql/mysql_84:/var/lib/mysql       # 数据持久化
+      - ./init:/docker-entrypoint-initdb.d  # 初始 SQL 脚本（可选）
+    command:
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
