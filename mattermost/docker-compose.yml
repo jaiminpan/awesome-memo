@@ -1,0 +1,73 @@
+# https://docs.docker.com/compose/environment-variables/
+services:
+  postgres:
+    image: postgres:13-alpine
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 100
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run/postgresql
+    volumes:
+      - ./postgresql/data:/var/lib/postgresql/data
+    environment:
+      # timezone inside container
+      - TZ
+
+      # necessary Postgres options/variables
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+
+  mattermost:
+    depends_on:
+      - postgres
+    image: mattermost/mattermost-enterprise-edition:10.5.9 # 'mattermost-enterprise-edition' or 'mattermost-team-edition'
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 200
+    read_only: false
+    tmpfs:
+      - /tmp
+    ports:
+      - 8065:8065
+      - 8443:8443/udp
+      - 8443:8443/tcp
+    volumes:
+      - ./app/mattermost/config:/mattermost/config:rw
+      - ./app/mattermost/data:/mattermost/data:rw
+      - ./app/mattermost/logs:/mattermost/logs:rw
+      - ./app/mattermost/plugins:/mattermost/plugins:rw
+      - ./app/mattermost/client/plugins:/mattermost/client/plugins:rw
+      - ./app/mattermost/bleve-indexes:/mattermost/bleve-indexes:rw
+      # When you want to use SSO with GitLab, you have to add the cert pki chain of GitLab inside Alpine
+      # to avoid Token request failed: certificate signed by unknown authority 
+      # (link: https://github.com/mattermost/mattermost-server/issues/13059 and https://github.com/mattermost/docker/issues/34)
+      # - ${GITLAB_PKI_CHAIN_PATH}:/etc/ssl/certs/pki_chain.pem:ro
+    environment:
+      # timezone inside container
+      - TZ
+
+      # necessary Mattermost options/variables (see env.example)
+      - MM_SQLSETTINGS_DRIVERNAME
+      - MM_SQLSETTINGS_DATASOURCE
+
+      # necessary for bleve
+      - MM_BLEVESETTINGS_INDEXDIR
+
+      # additional settings
+      - MM_SERVICESETTINGS_SITEURL
+
+# If you use rolling image tags and feel lucky watchtower can automatically pull new images and
+# instantiate containers from it. https://containrrr.dev/watchtower/
+# Please keep in mind watchtower will have access on the docker socket. This can be a security risk.
+#
+#  watchtower:
+#    container_name: watchtower
+#    image: containrrr/watchtower:latest
+#    restart: unless-stopped
+#    volumes:
+#      - /var/run/docker.sock:/var/run/docker.sock
