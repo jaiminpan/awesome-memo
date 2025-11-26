@@ -35,3 +35,8 @@ https://github.com/widuu/chinese_docker/tree/master/userguide
 Books
 ------------
 [Docker —— 从入门到实践](https://www.gitbook.com/book/yeasy/docker_practice)
+
+
+### docker-compose
+> sudo curl -L "https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+> ln -s /usr/local/bin/docker-compose /usr/bin

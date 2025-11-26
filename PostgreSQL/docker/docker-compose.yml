@@ -1,0 +1,35 @@
+# https://docs.docker.com/compose/environment-variables/
+services:
+  postgres:
+    image: postgres:17.7 # Specifies the PostgreSQL image version
+    container_name: my_postgres_db
+    restart: always # Ensures the container restarts if it stops Or `unless-stopped`
+    ports:
+      - "5432:5432" # Maps host port 5432 to container port 5432
+    tmpfs:
+      - /tmp
+      - /var/run/postgresql
+    environment:
+      POSTGRES_USER: username # The PostgreSQL user (useful to connect to the database)
+      POSTGRES_PASSWORD: password # The PostgreSQL password (useful to connect to the database)
+      POSTGRES_DB: my_db # The PostgreSQL default database (automatically created at first launch)
+    security_opt:
+      - no-new-privileges:true
+
+    # The `volumes` tag allows us to share a folder with our container.
+    # Its syntax is as follows: [folder path on our machine]:[folder path to retrieve in the container]
+    volumes:
+      - /data/appdatas/postgres/data:/var/lib/postgresql/data # Persists data using a named volume
+
+
+    ####
+    ## If you want to use a `.env` file, please comment the `environment` section.
+    ####
+
+    # The `env_file` tag allows us to declare an environment file
+    #env_file:
+    #  - .env # The name of your environment file (the one at the repository root)
+
+    ####
+    ## If you want to persist the database data, please uncomment the lines below.
+    ####

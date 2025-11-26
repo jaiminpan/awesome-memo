@@ -1,12 +1,10 @@
 # https://docs.docker.com/compose/environment-variables/
 services:
   postgres:
-    image: postgres:13-alpine
+    image: postgres:17.7
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
-    pids_limit: 100
-    read_only: true
     tmpfs:
       - /tmp
       - /var/run/postgresql
