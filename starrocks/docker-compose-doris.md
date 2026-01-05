@@ -1,3 +1,4 @@
+#### case 1
 version: "3"
 services:
   fe:
@@ -24,6 +25,7 @@ services:
     depends_on:
       - fe
 
+#### case 2
 version: "3"
 services:
   fe:
@@ -32,7 +34,6 @@ services:
     environment:
       - FE_SERVERS=fe1:172.31.37.145:9010   # INTERNAL_IP 替换为宿主机内网 IP
       - FE_ID=1
-      - FE_JAVA_OPTS=-Xms1g -Xmx2g   # ✅ 改这里
     volumes:
       - /data/doris/fe/doris-meta/:/opt/apache-doris/fe/doris-meta/
       - /data/doris/fe/log/:/opt/apache-doris/fe/log/
@@ -44,7 +45,6 @@ services:
     environment:
       - FE_SERVERS=fe1:172.31.37.145:9010
       - BE_ADDR=172.31.37.145:9050
-      - JAVA_OPTS=-Xms1g -Xmx2g   # 改为更小的堆
     volumes:
       - /data/doris/be/storage/:/opt/apache-doris/be/storage/
       - /data/doris/be/script/:/docker-entrypoint-initdb.d/
@@ -52,6 +52,7 @@ services:
     depends_on:
       - fe
 
+#### case 
 version: "3"
 services:
   fe:

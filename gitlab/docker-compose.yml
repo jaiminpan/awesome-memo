@@ -1,0 +1,24 @@
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:18.5.3-ce.0
+    container_name: gitlab
+    restart: always
+    hostname: 'gitlab.example.com' # Replace with your desired hostname
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://gitlab.example.com' # Replace with your desired URL
+        # Add any other gitlab.rb configuration here, each on its own line
+        # For example, to configure SMTP:
+        # gitlab_rails['smtp_enable'] = true
+        # gitlab_rails['smtp_address'] = "smtp.example.com"
+        # gitlab_rails['gitlab_shell_ssh_port'] = 2424
+    ports:
+      - '80:80'
+      - '443:443'
+      - '22:22'
+    volumes:
+      - '/data/gitlab/config:/etc/gitlab'
+      - '/data/gitlab/logs:/var/log/gitlab'
+      - '/data/gitlab/data:/var/opt/gitlab'
+    shm_size: '256m'
+

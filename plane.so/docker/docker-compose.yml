@@ -1,0 +1,78 @@
+version: "3.9"
+
+services:
+  plane-web:
+    image: makeplane/plane-frontend:v1.1.0
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${API_URL}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - plane-api
+    restart: unless-stopped
+    networks:
+      - plane-network
+
+  plane-api:
+    image: makeplane/plane-backend:v1.1.0
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+
+      # Storage (S3)
+      FILE_STORAGE_BACKEND: s3
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME}
+      AWS_S3_REGION: ${AWS_S3_REGION}
+      AWS_S3_ENDPOINT: ${AWS_S3_ENDPOINT}
+
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${WEB_URL}
+    ports:
+      - "8000:8000"
+    depends_on:
+      plane-migrator:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    networks:
+      - plane-network
+
+  plane-worker:
+    image: makeplane/plane-backend:v1.1.0
+    command: ["celery", "-A", "plane.celery_app", "worker", "--loglevel=info"]
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+    depends_on:
+      - plane-api
+    restart: unless-stopped
+    networks:
+      - plane-network
+
+  plane-scheduler:
+    image: makeplane/plane-backend:v1.1.0
+    command: ["celery", "-A", "plane.celery_app", "beat", "--loglevel=info"]
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+    depends_on:
+      - plane-api
+    restart: unless-stopped
+    networks:
+      - plane-network
+
+  plane-migrator:
+    image: makeplane/plane-backend:v1.1.0
+    command: ["python", "manage.py", "migrate"]
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+    restart: "no"
+    networks:
+      - plane-network
+
+networks:
+  plane-network:
+    driver: bridge
+

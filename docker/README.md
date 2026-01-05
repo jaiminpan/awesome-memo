@@ -12,22 +12,6 @@ Install the most recent version of the Docker Engine for your platform using the
 ```
 
 
-Docker In Github
----------------
-* Gitlab, PostgreSQL, MySQL, MongoDB and etc  
-  https://github.com/sameersbn/  
-  PS: Gitlab-8.3 in docker will get error 500 if git clone from svn and commits message title is 'git-svn-id......'  
-  (reword comments can fix it)   
-
-Gitlab Docker Sample:
----------------
-According to [Guilding](https://github.com/sameersbn/docker-gitlab)  
-Note: 
-* The alias of the postgresql server container should be set to **postgresql** while linking with the gitlab image.
-* The alias of the redis server container should be set to **redisio** while linking with the gitlab image.
-* If host (pg or redis server) is not reachable inside Gitlab docker, use **`iptables -t filter -A DOCKER -d 172.17.0.0/16 -i docker0 -o docker0 -j ACCEPT`**
-
-
 Reference
 --------------
 https://github.com/widuu/chinese_docker/tree/master/userguide
@@ -37,6 +21,21 @@ Books
 [Docker —— 从入门到实践](https://www.gitbook.com/book/yeasy/docker_practice)
 
 
+### docker
+```sh
+#安装
+curl -sSL https://get.daocloud.io/docker | sh
+#配置 Docker 加速器
+curl -sSL https://get.daocloud.io/daotools/set_mirror.sh | sh -s http://26109e56.m.daocloud.io
+#启动docker
+systemctl start docker
+#加入开机启动docker
+systemctl enable docker
+```
+
 ### docker-compose
-> sudo curl -L "https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-> ln -s /usr/local/bin/docker-compose /usr/bin
+```sh
+curl -L "https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+chmod a+x /usr/local/bin/docker-compose
+ln -s /usr/local/bin/docker-compose /usr/bin
+```

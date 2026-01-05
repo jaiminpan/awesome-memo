@@ -1,0 +1,28 @@
+services:
+  nocobase:
+    image: nocobase/nocobase:1.9.14-full
+    container_name: nocobase-app
+    ports:
+      - "13000:13000"
+    environment:
+      DB_DIALECT: postgres
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: nocobase
+      DB_USER: nocobase
+      DB_PASSWORD: nocobase
+
+      # Redis 配置
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    volumes:
+      - /data/nocobase/storage:/app/nocobase/storage
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7
+    container_name: nocobase-redis
+    volumes:
+      - /data/redis:/data
+    restart: always
