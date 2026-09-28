@@ -139,9 +139,9 @@ LOCATIONS = ("s3://dev-starrocks-data")
 PROPERTIES
 (
     "enabled" = "true",
-    "aws.s3.region" = "us-west-2",
-    "aws.s3.endpoint" = "https://s3.us-west-2.amazonaws.com",
-    "aws.s3.use_aws_sdk_default_behavior" = "true",
+    "aws.s3.region" = "ap-southeast-1",
+    "aws.s3.endpoint" = "https://s3.ap-southeast-1.amazonaws.com",
+    "aws.s3.use_aws_sdk_default_behavior" = "false",
     "aws.s3.use_instance_profile" = "false",
     "aws.s3.access_key" = "xxxxxxxxxx",
     "aws.s3.secret_key" = "yyyyyyyyyy",
@@ -149,6 +149,13 @@ PROPERTIES
 );
 
 SET def_volume AS DEFAULT STORAGE VOLUME;
+
+SHOW STORAGE VOLUMES;
+
+DESC STORAGE VOLUME def_volume;
+
+
+DROP STORAGE VOLUME IF EXISTS vol_test2;
 
 ````
 
@@ -206,6 +213,11 @@ FROM KAFKA (
     "property.group.id" = "doris_grp",
     "property.auto.offset.reset" = "latest"
 );
+
+SHOW ROUTINE LOAD;
+
+PAUSE ROUTINE LOAD FOR load_transaction_record;
+RESUME ROUTINE LOAD FOR [db_name.]<job_name>;
 
 
 -- SHOW PARTITIONS FROM t_record_stream_detail;

@@ -1,0 +1,36 @@
+services:
+  mongodb:
+    image: mongo:mongo:7.0.29
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      # 设置初始用户名和密码
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+    networks:
+      - app-network
+    volumes:
+      # 将数据库数据持久化到宿主机当前目录下的 /data 文件夹
+      - /data/appdatas/mongodb/data:/data/db
+
+# 可选：如果你想要个图形化管理界面，可以加上 mongo-express
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    restart: always
+    ports:
+      - "8081:8081"
+    networks:
+      - app-network
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password123
+      ME_CONFIG_MONGODB_URL: mongodb://admin:password123@mongodb:27017/
+    depends_on:
+      - mongodb
+
+networks:
+  app-network:
+    external: true  # 声明这是个外部已存在的网络%

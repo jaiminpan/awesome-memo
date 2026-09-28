@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   db:
-    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/mysql/mysql-server:8.0
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/mysql/mysql-server:8.0.26
     container_name: mysql_container
     restart: unless-stopped
     environment:
@@ -25,7 +25,7 @@ services:
       MYSQL_USER: test                 # 初始用户
       MYSQL_PASSWORD: test             # 用户密码
     volumes:
-      - /Users/jaiminpan/.data/appdatas/mysql/mysql_84:/var/lib/mysql       # 数据持久化
+      - /data/appdatas/mysql/mysql_84:/var/lib/mysql       # 数据持久化
       - ./init:/docker-entrypoint-initdb.d  # 初始 SQL 脚本（可选）
     command:
       --default-authentication-plugin=mysql_native_password

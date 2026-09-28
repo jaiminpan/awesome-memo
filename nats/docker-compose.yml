@@ -1,0 +1,58 @@
+# docker network create app-network
+services:
+  nats:
+    image: nats:2.12.6-alpine # nats:2.9.22-alpine
+    container_name: app-nats
+    restart: unless-stopped
+    ports:
+      - "4222:4222" # Client port
+      - "8222:8222" # HTTP monitoring port
+    command: >
+      -p 4222
+      -m 8222
+      --store_dir /data
+    volumes:
+      - /data/appdatas/nats/data:/data
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    external: true  # 声明这是个外部已存在的网络
+
+
+# cluster
+services:
+  nats:
+    image: nats:latest
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+      - "6222:6222" # Clustering port
+    command: ["-js", "-sd", "/data"] # Enable JetStream and set storage directory
+    volumes:
+      - nats_data:/data
+    restart: always
+  nats:
+    image: nats
+    ports:
+      - "8222:8222"
+    command: "--cluster_name NATS --cluster nats://0.0.0.0:6222 --http_port 8222 "
+    networks: ["nats"]
+  nats-1:
+    image: nats
+    command: "--cluster_name NATS --cluster nats://0.0.0.0:6222 --routes=nats://ruser:T0pS3cr3t@nats:6222"
+    networks: ["nats"]
+    depends_on: ["nats"]
+  nats-2:
+    image: nats
+    command: "--cluster_name NATS --cluster nats://0.0.0.0:6222 --routes=nats://ruser:T0pS3cr3t@nats:6222"
+    networks: ["nats"]
+    depends_on: ["nats"]
+
+volumes:
+  nats_data:
+
+networks:
+  nats:
+    name: nats

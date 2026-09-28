@@ -1,0 +1,19 @@
+version: "3.8"
+services:
+
+  zentao:
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/easysoft/zentao:21.7.7
+    container_name: zentao
+    restart: always
+    ports:
+      - "18080:80"
+    environment:
+      ZT_MYSQL_HOST: 127.0.0.1
+      ZT_MYSQL_PORT: 3306
+      ZT_MYSQL_USER: zentao
+      ZT_MYSQL_PASSWORD: zentao123
+      ZT_MYSQL_DB: zentao
+    volumes:
+      - /data/appdatas/zentao/data:/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

@@ -39,3 +39,8 @@ curl -L "https://github.com/docker/compose/releases/download/v2.27.0/docker-comp
 chmod a+x /usr/local/bin/docker-compose
 ln -s /usr/local/bin/docker-compose /usr/bin
 ```
+
+```sh
+# 创建网络
+docker network create app-network
+```
